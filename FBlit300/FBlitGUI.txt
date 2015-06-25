@@ -1,0 +1,62 @@
+
+WBStartup
+
+INCLUDE "blitz2:dev/amigaincludes/mui/mui.bb2"
+
+version:
+  Data$  "$VER: FBlitGUI 3.18 (29.05.2001) Stephen Brookes"
+  Data.b 0
+
+  author$="Stephen Brookes"
+
+
+
+;******************************************     temp fix
+;CHDir("code:blitz/civii")
+;******************************************
+
+INCLUDE "code:blitz/fblit300/fblitutil.bb2"
+INCLUDE "code:blitz/fblit300/definitions.bb2"
+INCLUDE "code:blitz/fblit300/help.bb2"
+
+Dim patch.pathigh(#NUM_PATCHES+1)
+
+INCLUDE "code:blitz/fblit300/list_manager.bb2"
+INCLUDE "code:blitz/fblit300/cfg_def.bb2"
+INCLUDE "code:blitz/fblit300/MUIfblit.bb2"
+INCLUDE "code:blitz/fblit300/MUIbltbitmap.bb2"
+INCLUDE "code:blitz/fblit300/MUIbltclear.bb2"
+INCLUDE "code:blitz/fblit300/MUIblttemplate.bb2"
+INCLUDE "code:blitz/fblit300/MUIbltpattern.bb2"
+INCLUDE "code:blitz/fblit300/MUIbitmapscale.bb2"
+INCLUDE "code:blitz/fblit300/MUIallocbitmap.bb2"
+INCLUDE "code:blitz/fblit300/MUIsetrast.bb2"
+INCLUDE "code:blitz/fblit300/MUIaddbobpatch.bb2"
+INCLUDE "code:blitz/fblit300/MUIdraw.bb2"
+INCLUDE "code:blitz/fblit300/MUIQBSBlitPatch.bb2"
+INCLUDE "code:blitz/fblit300/MUIOSTLPatch.bb2"
+INCLUDE "code:blitz/fblit300/MUIRIBPatch.bb2"
+INCLUDE "code:blitz/fblit300/MUIareaend.bb2"
+INCLUDE "code:blitz/fblit300/MUIflood.bb2"
+INCLUDE "code:blitz/fblit300/fblitMUIhandler.bb2"
+
+
+
+.main
+;this is the main programme
+
+  Gosub startup
+  Gosub poll
+  Goto  exit
+
+
+
+INCLUDE "code:blitz/fblit300/startupGUI.bb2"
+INCLUDE "code:blitz/fblit300/pollGUI.bb2"
+INCLUDE "code:blitz/fblit300/exitGUI.bb2"
+
+
+
+
+
+

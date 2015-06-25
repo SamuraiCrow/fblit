@@ -1,0 +1,463 @@
+
+;MUI handler
+
+
+
+
+;add and open a window
+
+.MUIaddopen
+
+  Statement MUIaddopen{*win._Object}
+
+    SHARED Macro_Tags.l(),mactag.l,*app._Object
+
+    !NewTags{#OM_ADDMEMBER              ,*win}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*app,&Macro_Tags(0)}
+
+    trash.l=MUIset{*win,#MUIA_Window_Open,#MUI_TRUE}
+
+  End Statement
+
+
+
+;close and remove a window
+
+.MUIcloserem
+
+  Statement MUIcloserem{*win._Object}
+
+    SHARED Macro_Tags.l(),mactag.l,*app._Object
+
+    trash.l=MUIset{*win,#MUIA_Window_Open,#MUI_FALSE}
+
+    !NewTags{#OM_REMMEMBER              ,*win}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*app,&Macro_Tags(0)}
+
+    trash.l=MUIDisposeObject_(*win)
+
+  End Statement
+
+
+
+
+
+;the main window.
+
+  Goto MUImainskip
+
+.MUImain
+
+  ;build patch registers
+
+  Gosub build_fblit
+  Gosub build_bbm
+  Gosub build_bc
+  Gosub build_bt
+  Gosub build_bp
+  Gosub build_bms
+  Gosub build_abm
+  Gosub build_sr
+  Gosub build_adb
+  Gosub build_dr
+  Gosub build_qbsb
+  Gosub build_ostlp
+  Gosub build_rib
+  Gosub build_fae
+  Gosub build_flood
+
+
+  ;build page group
+
+    !NewTags{!Child                 ,patch(0)\reg}
+    !AddTags{!Child                 ,patch(1)\reg}
+    !AddTags{!Child                 ,patch(2)\reg}
+    !AddTags{!Child                 ,patch(3)\reg}
+    !AddTags{!Child                 ,patch(4)\reg}
+    !AddTags{!Child                 ,patch(5)\reg}
+    !AddTags{!Child                 ,patch(6)\reg}
+    !AddTags{!Child                 ,patch(7)\reg}
+    !AddTags{!Child                 ,patch(8)\reg}
+    !AddTags{!Child                 ,patch(14)\reg}
+    !AddTags{!Child                 ,patch(10)\reg}
+    !AddTags{!Child                 ,patch(12)\reg}
+    !AddTags{!Child                 ,patch(9)\reg}
+    !AddTags{!Child                 ,patch(13)\reg}
+    !AddTags{!Child                 ,patch(11)\reg}
+    !AddTags{#TAG_DONE}
+    *pagegroup._Object=!PageGroup
+
+
+  ;build listview
+
+    Dim a$(#NUM_PATCHES+1),z.l(#NUM_PATCHES+1)
+
+  ;quick hack here to change order of patches in listview
+  ;!!!must match order above!!!
+
+    Goto hackskip
+
+hackfix:
+
+      a$(a)=param{patch(b)\version,1,$20,0}
+      z(a)=&a$(a)
+      Return
+
+hackskip:
+
+    For a.l=0 To 8 ;#NUM_PATCHES
+      b=a : Gosub hackfix
+    Next a
+
+    a=9  : b=14 : Gosub hackfix
+    a=10 : b=10 : Gosub hackfix
+    a=11 : b=12 : Gosub hackfix
+    a=12 : b=9  : Gosub hackfix
+    a=13 : b=13 : Gosub hackfix
+    a=14 : b=11 : Gosub hackfix
+
+    z(#NUM_PATCHES+1)=0
+
+    !NewTags{#MUIA_List_SourceArray ,&z(0)}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_InputList}
+    !AddTags{#MUIA_List_AutoVisible ,#MUI_TRUE}
+    !AddTags{#MUIA_List_AdjustWidth ,#MUI_TRUE}
+    !AddTags{#TAG_DONE}
+    *lst._Object=!ListObject
+
+    !NewTags{#MUIA_Listview_List    ,*lst}
+    !AddTags{#MUIA_CycleChain       ,#MUI_TRUE}
+    !AddTags{#TAG_DONE}
+    *lstview._Object=!ListviewObject
+
+    trash.l=MUIset{*lstview,#MUIA_List_Active,0}
+
+
+  ;build button group
+
+    b1$="Save"
+    b2$="Use"
+    b3$="Quit"
+    b4$="Cancel"
+
+    *b1._Object=!SimpleButton{b1$}
+    *b2._Object=!SimpleButton{b2$}
+    *b3._Object=!SimpleButton{b3$}
+    *b4._Object=!SimpleButton{b4$}
+
+    !NewTags{!Child     ,*b1}
+    !AddTags{!Child     ,*b2}
+    !AddTags{!Child     ,*b3}
+    !AddTags{!Child     ,*b4}
+    !AddTags{#TAG_DONE}
+    *butgroup._Object=!ColGroup{4}
+
+
+  ;build the window
+
+    !NewTags{!Child     ,*lstview}
+    !AddTags{!Child     ,*pagegroup}
+    !AddTags{#TAG_DONE}
+    *topgroup._Object=!HGroup
+
+    !NewTags{!Child     ,*topgroup}
+    !AddTags{!Child     ,*butgroup}
+    !AddTags{#TAG_DONE}
+    *maingroup._Object=!VGroup
+
+    !NewTags{#MUIA_Window_Title         ,&title$}
+    !AddTags{!WindowContents            ,*maingroup}
+    !AddTags{#MUIA_Window_ID            ,#WIN_MAIN}
+    !AddTags{#TAG_DONE}
+    *mainwin._Object=!WindowObject
+
+
+  ;add window
+
+    If *mainwin
+
+  ;notify
+
+  ;quit button
+
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#MAIN_KILL}
+      !AddTags{#TAG_DONE}
+
+      trash.l=DoMethodA{*b3,&Macro_Tags(0)}
+      trash.l=MUIset{*b3,#MUIA_ShortHelp,&h3$}
+
+  ;cancel button
+
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Window_CloseRequest  ,#MUI_TRUE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#MAIN_CANCEL}
+      !AddTags{#TAG_DONE}
+
+      trash.l=DoMethodA{*mainwin,&Macro_Tags(0)}
+
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#MAIN_CANCEL}
+      !AddTags{#TAG_DONE}
+
+      trash.l=DoMethodA{*b4,&Macro_Tags(0)}
+      trash.l=MUIset{*b4,#MUIA_ShortHelp,&h4$}
+
+  ;save button
+
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#MAIN_SAVE}
+      !AddTags{#TAG_DONE}
+
+      trash.l=DoMethodA{*b1,&Macro_Tags(0)}
+      trash.l=MUIset{*b1,#MUIA_ShortHelp,&h1$}
+
+  ;use button
+
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#MAIN_USE}
+      !AddTags{#TAG_DONE}
+
+      trash.l=DoMethodA{*b2,&Macro_Tags(0)}
+      trash.l=MUIset{*b2,#MUIA_ShortHelp,&h2$}
+
+  ;listview
+
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_List_Active          ,#MUIV_EveryTime}
+      !AddTags{*pagegroup                 ,3}
+      !AddTags{#MUIM_Set,#MUIA_Group_ActivePage,#MUIV_TriggerValue}
+      !AddTags{#TAG_DONE}
+
+      trash.l=DoMethodA{*lstview,&Macro_Tags(0)}
+
+  ;add window
+
+      !NewTags{#OM_ADDMEMBER              ,*mainwin}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*app,&Macro_Tags(0)}
+
+      trash.l=MUIset{*mainwin,#MUIA_Window_ActiveObject,*lstview}
+
+    End If
+
+  Return
+
+
+
+;bbm debug bitmap window
+
+.MUIbbdebug:
+
+    ;source bmp group
+
+    bbdebs1$="Source BitMap"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Text}
+    !AddTags{#MUIA_Font             ,#MUIV_Font_Fixed}
+    !AddTags{#TAG_DONE}
+    *bbdebsl1._Object=!Label{"BPR:"}
+    *bbdebst1._Object=!TextObject
+    *bbdebsl2._Object=!Label{"Rows:"}
+    *bbdebst2._Object=!TextObject
+    *bbdebsl3._Object=!Label{"Flags:"}
+    *bbdebst3._Object=!TextObject
+    *bbdebsl4._Object=!Label{"Depth:"}
+    *bbdebst4._Object=!TextObject
+    *bbdebsl5._Object=!Label{"Pad:"}
+    *bbdebst5._Object=!TextObject
+    *bbdebsl6._Object=!Label{"#0:"}
+    *bbdebst6._Object=!TextObject
+    *bbdebsl7._Object=!Label{"#1:"}
+    *bbdebst7._Object=!TextObject
+    *bbdebsl8._Object=!Label{"#2:"}
+    *bbdebst8._Object=!TextObject
+    *bbdebsl9._Object=!Label{"#3:"}
+    *bbdebst9._Object=!TextObject
+    *bbdebsl10._Object=!Label{"#4:"}
+    *bbdebst10._Object=!TextObject
+    *bbdebsl11._Object=!Label{"#5:"}
+    *bbdebst11._Object=!TextObject
+    *bbdebsl12._Object=!Label{"#6:"}
+    *bbdebst12._Object=!TextObject
+    *bbdebsl13._Object=!Label{"#7:"}
+    *bbdebst13._Object=!TextObject
+
+    !NewTags{!Child                 ,*bbdebsl1}
+    !AddTags{!Child                 ,*bbdebst1}
+    !AddTags{!Child                 ,*bbdebsl6}
+    !AddTags{!Child                 ,*bbdebst6}
+    !AddTags{!Child                 ,*bbdebsl2}
+    !AddTags{!Child                 ,*bbdebst2}
+    !AddTags{!Child                 ,*bbdebsl7}
+    !AddTags{!Child                 ,*bbdebst7}
+    !AddTags{!Child                 ,*bbdebsl3}
+    !AddTags{!Child                 ,*bbdebst3}
+    !AddTags{!Child                 ,*bbdebsl8}
+    !AddTags{!Child                 ,*bbdebst8}
+    !AddTags{!Child                 ,*bbdebsl4}
+    !AddTags{!Child                 ,*bbdebst4}
+    !AddTags{!Child                 ,*bbdebsl9}
+    !AddTags{!Child                 ,*bbdebst9}
+    !AddTags{!Child                 ,*bbdebsl5}
+    !AddTags{!Child                 ,*bbdebst5}
+    !AddTags{!Child                 ,*bbdebsl10}
+    !AddTags{!Child                 ,*bbdebst10}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*bbdebsl11}
+    !AddTags{!Child                 ,*bbdebst11}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*bbdebsl12}
+    !AddTags{!Child                 ,*bbdebst12}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*bbdebsl13}
+    !AddTags{!Child                 ,*bbdebst13}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&bbdebs1$}
+    !AddTags{#MUIA_Background       ,#MUII_TextBack}
+    !AddTags{#TAG_DONE}
+    *bbdebg1._Object=!ColGroup{4}
+
+  ;dest bmp group
+
+    bbdebd1$="Dest BitMap"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Text}
+    !AddTags{#MUIA_Font             ,#MUIV_Font_Fixed}
+    !AddTags{#TAG_DONE}
+    *bbdebdl1._Object=!Label{"BPR:"}
+    *bbdebdt1._Object=!TextObject
+    *bbdebdl2._Object=!Label{"Rows:"}
+    *bbdebdt2._Object=!TextObject
+    *bbdebdl3._Object=!Label{"Flags:"}
+    *bbdebdt3._Object=!TextObject
+    *bbdebdl4._Object=!Label{"Depth:"}
+    *bbdebdt4._Object=!TextObject
+    *bbdebdl5._Object=!Label{"Pad:"}
+    *bbdebdt5._Object=!TextObject
+    *bbdebdl6._Object=!Label{"#0:"}
+    *bbdebdt6._Object=!TextObject
+    *bbdebdl7._Object=!Label{"#1:"}
+    *bbdebdt7._Object=!TextObject
+    *bbdebdl8._Object=!Label{"#2:"}
+    *bbdebdt8._Object=!TextObject
+    *bbdebdl9._Object=!Label{"#3:"}
+    *bbdebdt9._Object=!TextObject
+    *bbdebdl10._Object=!Label{"#4:"}
+    *bbdebdt10._Object=!TextObject
+    *bbdebdl11._Object=!Label{"#5:"}
+    *bbdebdt11._Object=!TextObject
+    *bbdebdl12._Object=!Label{"#6:"}
+    *bbdebdt12._Object=!TextObject
+    *bbdebdl13._Object=!Label{"#7:"}
+    *bbdebdt13._Object=!TextObject
+
+    !NewTags{!Child                 ,*bbdebdl1}
+    !AddTags{!Child                 ,*bbdebdt1}
+    !AddTags{!Child                 ,*bbdebdl6}
+    !AddTags{!Child                 ,*bbdebdt6}
+    !AddTags{!Child                 ,*bbdebdl2}
+    !AddTags{!Child                 ,*bbdebdt2}
+    !AddTags{!Child                 ,*bbdebdl7}
+    !AddTags{!Child                 ,*bbdebdt7}
+    !AddTags{!Child                 ,*bbdebdl3}
+    !AddTags{!Child                 ,*bbdebdt3}
+    !AddTags{!Child                 ,*bbdebdl8}
+    !AddTags{!Child                 ,*bbdebdt8}
+    !AddTags{!Child                 ,*bbdebdl4}
+    !AddTags{!Child                 ,*bbdebdt4}
+    !AddTags{!Child                 ,*bbdebdl9}
+    !AddTags{!Child                 ,*bbdebdt9}
+    !AddTags{!Child                 ,*bbdebdl5}
+    !AddTags{!Child                 ,*bbdebdt5}
+    !AddTags{!Child                 ,*bbdebdl10}
+    !AddTags{!Child                 ,*bbdebdt10}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*bbdebdl11}
+    !AddTags{!Child                 ,*bbdebdt11}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*bbdebdl12}
+    !AddTags{!Child                 ,*bbdebdt12}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*bbdebdl13}
+    !AddTags{!Child                 ,*bbdebdt13}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&bbdebd1$}
+    !AddTags{#MUIA_Background       ,#MUII_TextBack}
+    !AddTags{#TAG_DONE}
+    *bbdebg2._Object=!ColGroup{4}
+
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*bbdebg1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*bbdebg2}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#TAG_DONE}
+    *bbdebg3._Object=!HGroup
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bbdebg3}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *bbdebg4._Object=!VGroup
+
+  ;build the window
+
+    debtit$="Last recorded 'Broken' BitMaps"
+
+    !NewTags{#MUIA_Window_Title         ,&debtit$}
+    !AddTags{!WindowContents            ,*bbdebg4}
+    !AddTags{#MUIA_Window_ID            ,#WIN_DEBUG}
+    !AddTags{#TAG_DONE}
+    *debugwin._Object=!WindowObject
+
+  ;add window
+
+    If *debugwin
+
+  ;cancel button
+
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Window_CloseRequest  ,#MUI_TRUE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#BBM_GAD9}
+      !AddTags{#TAG_DONE}
+
+      trash.l=DoMethodA{*debugwin,&Macro_Tags(0)}
+
+
+  ;add window
+
+      !NewTags{#OM_ADDMEMBER              ,*debugwin}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*app,&Macro_Tags(0)}
+    Else
+      doerror{"MUI creation failure in Debug Window!"}
+      Goto exit
+    End If
+
+  Return
+
+
+
+MUImainskip:
+
+
+
+
+

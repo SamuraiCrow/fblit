@@ -1,0 +1,94 @@
+
+;MUI bltbitmap handler
+
+Goto muifblitx                  ;skip this code
+
+
+
+
+
+
+;build mui objects.
+
+.build_fblit:
+
+  ;info group
+
+    *fblitfil1._Object=!Label{patch(0)\version}
+    fblitfig1$="Version"
+
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*fblitfil1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&fblitfig1$}
+    !AddTags{#MUIA_Background       ,#MUII_TextBack}
+    !AddTags{#TAG_DONE}
+    *fblitfig1._Object=!HGroup
+
+  ;set up the text
+
+    fblittext$=Chr$($0a)
+    fblittext$+"FBlit and FBlitGUI are "+Chr$($a9)+" 1997-2000 Stephen Brookes "+Chr$($0a)
+    fblittext$+Chr$($0a)
+    fblittext$+"My thanks to the following people."+Chr$($0a)
+    fblittext$+Chr$($0a)
+    fblittext$+"Luca Longone"+Chr$($0a)
+    fblittext$+"Rick Pratt"+Chr$($0a)
+    fblittext$+"Ian Greenway"+Chr$($0a)
+    fblittext$+"Przemyslaw Gruchala"+Chr$($0a)
+    fblittext$+"Piotr Powlow"+Chr$($0a)
+    fblittext$+"Marco De Vitis"+Chr$($0a)
+    fblittext$+"Artur Chlebek"+Chr$($0a)
+    fblittext$+"Thomas Richter"+Chr$($0a)
+    fblittext$+"Jess Sosnoski"+Chr$($0a)
+    fblittext$+"Matt Sealey"+Chr$($0a)
+    fblittext$+"Evan Tuer"+Chr$($0a)
+    fblittext$+"Aldo Bianchi"+Chr$($0a)
+    fblittext$+"Gary Colville"+Chr$($0a)
+    fblittext$+"James L Boyd"+Chr$($0a)
+    fblittext$+"Colin Wenzel"+Chr$($0a)
+    fblittext$+"Iain Barclay"+Chr$($0a)
+    fblittext$+"Oliver Borrmann"+Chr$($0a)
+
+    lform$="P="+Chr$($1b)+"c"
+
+    !NewTags{#MUIA_Floattext_Text     ,&fblittext$}
+    !AddTags{#MUIA_Frame              ,#MUIV_Frame_ReadList}
+    !AddTags{#MUIA_Background         ,#MUII_TextBack}
+    !AddTags{#MUIA_Floattext_TabSize  ,4}
+    !AddTags{#MUIA_List_Format        ,&lform$}
+    !AddTags{#TAG_DONE}
+    *fblittext._Object=!FloattextObject
+
+    !NewTags{#MUIA_Weight         ,50}
+    !AddTags{#MUIA_Listview_Input ,#MUI_FALSE}
+    !AddTags{#MUIA_Listview_List  ,*fblittext}
+    !AddTags{#TAG_DONE}
+    *fblitfig2._Object=!ListviewObject
+
+  ;window group
+
+    !NewTags{!Child                 ,*fblitfig1}
+    !AddTags{!Child                 ,*fblitfig2}
+    !AddTags{#TAG_DONE}
+    *fblitfr2._Object=!VGroup
+
+  ;reg group
+
+    patch(0)\reg=*fblitfr2
+
+    If patch(0)\reg=0
+      doerror{"MUI creation failure in FBltBitMap."}
+      Goto exit
+    End If
+
+  Return
+
+
+
+
+
+
+
+muifblitx:

@@ -1,0 +1,359 @@
+
+;MUI bltclear handler
+
+Goto muiostlpx                  ;skip this code
+
+#OSTLP=12
+
+
+
+
+.define_ostlp
+  Data$ "Config","Info","*"
+  Data$ "Installed","Removed","*"
+  Data$ "Active","Disabled","**"
+
+  Dim ostlpf$(32)           ;*** MAX 32 STRINGS!! ***
+
+  Restore define_ostlp:
+
+  a.l=0
+  b.l=1
+  patch(#OSTLP)\muisarray[0]=&patch(#OSTLP)\muispnt[0]
+
+  Repeat
+    Read  ostlpf$(a)
+
+    If Left$(ostlpf$(a),1)="*"
+      patch(#OSTLP)\muispnt[a]=0
+      patch(#OSTLP)\muisarray[b]=&patch(#OSTLP)\muispnt[a+1]
+      b+1
+    Else
+      patch(#OSTLP)\muispnt[a]=&ostlpf$(a)
+    End If
+
+    a+1
+  Until ostlpf$(a-1)="**"
+
+  Return
+
+
+
+
+
+
+
+
+
+;build mui objects.
+
+.build_ostlp:
+
+  ;control group
+
+    #OSTLP_BASEID=$c00           ;ostlp return id base
+
+    ostlpf1$="Installed:"
+    *ostlpf1._Object=!CheckMark{0}
+
+    #OSTLP_GAD1=#OSTLP_BASEID+1
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app._Object               ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#OSTLP_GAD1}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*ostlpf1,&Macro_Tags(0)}
+
+    ostlpf2$="Activated:"
+    *ostlpf2._Object=!CheckMark{0}
+
+    #OSTLP_GAD2=#OSTLP_BASEID+2
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#OSTLP_GAD2}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*ostlpf2,&Macro_Tags(0)}
+
+    ostlpfg1$="Patch Installation"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{ostlpf1$}}
+    !AddTags{!Child                 ,*ostlpf1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{ostlpf2$}}
+    !AddTags{!Child                 ,*ostlpf2}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&ostlpfg1$}
+    !AddTags{TAG_DONE}
+    *ostlpfg1._Object=!HGroup
+
+;    *ostlpl3._Object=!Label{"Fast Data Options"}
+;    !NewTags{#MUIA_Cycle_Entries    ,patch(#OSTLP)\muisarray[3]}
+;    !AddTags{#TAG_DONE}
+;    *ostlpf5._Object=!CycleObject
+;
+;    #OSTLP_GAD5=#OSTLP_BASEID+5
+;    !NewTags{#MUIM_Notify}
+;    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+;    !AddTags{*app                       ,2}
+;    !AddTags{#MUIM_Application_ReturnID ,#OSTLP_GAD5}
+;    !AddTags{#TAG_DONE}
+;    trash.l=DoMethodA{*ostlpf5,&Macro_Tags(0)}
+;
+;    ostlpfg2$="Patch Operation"
+;    !NewTags{#MUIA_Frostlpe            ,#MUIV_Frostlpe_Group}
+;    !AddTags{#MUIA_FrostlpeTitle       ,&ostlpfg2$}
+;    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{!Child                 ,*ostlpl3}
+;    !AddTags{!Child                 ,*ostlpf5}
+;    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{#TAG_DONE}
+;    *ostlpfg2._Object=!ColGroup{4}
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*ostlpfg1}
+    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{!Child                 ,*ostlpfg2}
+;    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *ostlpfr1._Object=!VGroup
+
+  ;info group
+
+    *ostlpfil1._Object=!Label{patch(#OSTLP)\version}
+    ostlpfig1$="Version"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*ostlpfil1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&ostlpfig1$}
+    !AddTags{#TAG_DONE}
+    *ostlpfig1._Object=!HGroup
+
+    ostlpfig2$="Stats"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Text}
+    !AddTags{#MUIA_Font             ,#MUIV_Font_Fixed}
+    !AddTags{#TAG_DONE}
+    *ostlpil1._Object=!Label{"Original Addr:"}
+    *ostlpit1._Object=!TextObject
+    *ostlpil2._Object=!Label{"- :"}
+    *ostlpit2._Object=!TextObject
+    *ostlpil3._Object=!Label{"Current Addr:"}
+    *ostlpit3._Object=!TextObject
+    *ostlpil4._Object=!Label{"- :"}
+    *ostlpit4._Object=!TextObject
+    *ostlpil5._Object=!Label{"Patch Code:"}
+    *ostlpit5._Object=!TextObject
+    *ostlpil6._Object=!HSpace{0}
+    *ostlpit6._Object=!HSpace{0}
+    *ostlpil7._Object=!HSpace{0}
+    *ostlpit7._Object=!HSpace{0}
+    *ostlpil8._Object=!HSpace{0}
+    *ostlpit8._Object=!HSpace{0}
+    ostlpib1$="Update"
+    *ostlpib1._Object=!SimpleButton{ostlpib1$}
+      #OSTLP_GAD6=#OSTLP_BASEID+6
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#OSTLP_GAD6}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*ostlpib1,&Macro_Tags(0)}
+    ostlpib2$="Reset"
+    *ostlpib2._Object=!SimpleButton{ostlpib2$}
+      #OSTLP_GAD7=#OSTLP_BASEID+7
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#OSTLP_GAD7}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*ostlpib2,&Macro_Tags(0)}
+    !NewTags{!Child                 ,*ostlpil1}
+    !AddTags{!Child                 ,*ostlpit1}
+    !AddTags{!Child                 ,*ostlpil2}
+    !AddTags{!Child                 ,*ostlpit2}
+    !AddTags{!Child                 ,*ostlpil3}
+    !AddTags{!Child                 ,*ostlpit3}
+    !AddTags{!Child                 ,*ostlpil4}
+    !AddTags{!Child                 ,*ostlpit4}
+    !AddTags{!Child                 ,*ostlpil5}
+    !AddTags{!Child                 ,*ostlpit5}
+    !AddTags{!Child                 ,*ostlpil6}
+    !AddTags{!Child                 ,*ostlpit6}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*ostlpil7}
+    !AddTags{!Child                 ,*ostlpit7}
+    !AddTags{!Child                 ,*ostlpib1}
+    !AddTags{!Child                 ,*ostlpib2}
+    !AddTags{!Child                 ,*ostlpil8}
+    !AddTags{!Child                 ,*ostlpit8}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&ostlpfig2$}
+    !AddTags{#TAG_DONE}
+    *ostlpfig2._Object=!ColGroup{4}
+
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*ostlpfig1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*ostlpfig2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *ostlpfr2._Object=!VGroup
+
+  ;reg group
+
+    !NewTags{!Child                 ,*ostlpfr1}
+    !AddTags{!Child                 ,*ostlpfr2}
+    !AddTags{#TAG_DONE}
+    patch(#OSTLP)\reg=!RegisterGroup{patch(#OSTLP)\muisarray[0]}
+
+    If patch(#OSTLP)\reg=0
+      doerror{"MUI creation failure in AllocMem."}
+      Goto exit
+    Else
+
+  ;help
+      trash=MUIset{*ostlpf1,#MUIA_ShortHelp,&h5$}
+      trash=MUIset{*ostlpf2,#MUIA_ShortHelp,&h6$}
+      trash=MUIset{*ostlpib1,#MUIA_ShortHelp,&h8$}
+      trash=MUIset{*ostlpib2,#MUIA_ShortHelp,&h7$}
+;      trash=MUIset{*ostlpf5,#MUIA_ShortHelp,&h14$}
+    End If
+
+    Gosub ostlp_intfc
+    Gosub ostlp_stats
+
+  Return
+
+
+
+
+
+
+;poll ostlp
+
+.ostlp_poll
+
+  a.l=0
+
+  Select sel.l
+
+    Case  #OSTLP_GAD1                 ;install gadget
+      trash.l=GetAttr_(#MUIA_Selected,*ostlpf1,&a)
+      flags.l=patch(#OSTLP)\exe\flags
+      flags=unset{flags,#PF_INSTALLED,(a=#MUI_TRUE)}
+      error.l=installpatch{#OSTLP,flags}
+
+      If error
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+        trash.l=MUIset{*ostlpf1,#MUIA_Selected,#MUI_TRUE}
+        a$="OSTLPatch has been overpatched|"
+        a$+"and therefore cannot be removed!"
+        doerror{a$}
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+      Else
+        Gosub ostlp_stats
+      End If
+
+    Case  #OSTLP_GAD2                 ;active gadget
+      trash.l=GetAttr_(#MUIA_Selected,*ostlpf2,&a)
+      patch(#OSTLP)\exe\flags=unset{patch(#OSTLP)\exe\flags,#PF_ACTIVATED,(a=#MUI_TRUE)}
+
+;    Case  #OSTLP_GAD5                 ;fast option
+;      trash.l=GetAttr_(#MUIA_Cycle_Active,*ostlpf5,&a)
+;
+;      flags=patch(#OSTLP)\exe\flags
+;      flags=unset{flags,#OSTLPF_FPASSON,(a=0)}
+;      flags=unset{flags,#OSTLPF_FDISCARD,(a=1)}
+;      patch(#OSTLP)\exe\flags=flags
+
+    Case  #OSTLP_GAD6                 ;update stats
+      Gosub ostlp_stats
+
+    Case  #OSTLP_GAD7                 ;reset stats
+
+      Forbid_
+        patch(#OSTLP)\exe\fastcnt=0
+        patch(#OSTLP)\exe\proccnt=0
+        patch(#OSTLP)\exe\passcnt=0
+      Permit_
+
+      Gosub ostlp_stats
+
+
+  End Select
+
+  Return
+
+
+
+
+
+
+;update the ostlp interface
+
+.ostlp_intfc:
+
+  flags.l=patch(#OSTLP)\exe\flags
+
+  If (flags AND #PF_INSTALLED)
+    trash.l=MUIset{*ostlpf1,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*ostlpf1,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #PF_ACTIVATED)
+    trash.l=MUIset{*ostlpf2,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*ostlpf2,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+;  If (flags AND #OSTLPF_FPASSON)
+;    a.l=0
+;  End If
+;
+;  If (flags AND #OSTLPF_FDISCARD)
+;    a.l=1
+;  End If
+;
+;  trash.l=MUIset{*ostlpf5,#MUIA_Cycle_Active,a}
+
+  Return
+
+
+
+
+
+;update ostlp stats
+
+.ostlp_stats
+
+  Forbid_
+    current.l=Peek.l(patch(#OSTLP)\base+patch(#OSTLP)\lvo+2)
+;    fast.l=patch(#OSTLP)\exe\fastcnt
+;    pass.l=patch(#OSTLP)\exe\passcnt
+;    proc.l=patch(#OSTLP)\exe\proccnt
+  Permit_
+
+  If patch(#OSTLP)\exe\flags AND #PF_INSTALLED
+    trash.l=MUIset{*ostlpit1,#MUIA_Text_Contents,"$"+Hex$(Peek.l(patch(#OSTLP)\exe\orig+2))}
+  Else
+    trash.l=MUIset{*ostlpit1,#MUIA_Text_Contents,"$--------"}
+  End If
+
+;  total.l=pass+proc
+;  trash.l=MUIset{*ostlpit2,#MUIA_Text_Contents,"$"+Hex$(fast)}
+  trash.l=MUIset{*ostlpit3,#MUIA_Text_Contents,"$"+Hex$(current)}
+;  trash.l=MUIset{*ostlpit4,#MUIA_Text_Contents,"$"+Hex$(proc)}
+  trash.l=MUIset{*ostlpit5,#MUIA_Text_Contents,"$"+Hex$(&patch(#OSTLP)\exe\code)}
+;  trash.l=MUIset{*ostlpit6,#MUIA_Text_Contents,"$"+Hex$(pass)}
+;  trash.l=MUIset{*ostlpit7,#MUIA_Text_Contents,"$"+Hex$(proc)}
+;  trash.l=MUIset{*ostlpit8,#MUIA_Text_Contents,"$"+Hex$(total)}
+
+  Return
+
+
+muiostlpx:

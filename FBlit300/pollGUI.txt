@@ -1,0 +1,336 @@
+
+
+
+;main base poll
+.poll:
+
+  quit.l=False
+  kill.l=False
+  store$=SPACE$(256)
+  store.l=&store$
+  sigs.l=0
+
+  Gosub open_win
+
+
+;main event loop
+
+  Repeat
+    Gosub poll_mui
+
+  ;deal with any MUI
+
+    Select sel
+
+      Case  #MUIV_Application_ReturnID_Quit
+        quit=True
+
+      Case  #MAIN_SAVE
+        Gosub close_win
+        write_cfg{"env:FBlit.cfg"}
+        write_cfg{"envarc:FBlit.cfg"}
+        Gosub swapfabmlist
+        quit=True
+
+      Case  #MAIN_USE
+        Gosub close_win
+        write_cfg{"env:FBlit.cfg"}
+        Gosub swapfabmlist
+        quit=True
+
+      Case  #MAIN_CANCEL
+        Gosub close_win
+        read_cfg{"env:FBlit.cfg"}
+
+        error.l=False
+        For a.l=1 To #NUM_PATCHES           ;install all patches
+          trash.l=installpatch{a,patch(a)\tflags}
+
+          If trash
+            error.l=True
+          End If
+
+        Next a
+
+        If error
+          trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+          a$="Warning! Configuration could not|"
+          a$="be restored due to overpatching."
+          doerror{a$}
+          trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+        End If
+
+        quit=True
+
+      Case  #MAIN_KILL
+        kill=True
+        quit=True
+
+        a$="Quiting FBlit can be|"
+        a$+"very dangerous!||"
+        a$+"Change your mind now!"
+
+        b$="Quit|Cancel"
+
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+        a.l=Request(prog$,a$,b$)
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+
+        If a=0
+          kill=False
+          quit=False
+        End If
+
+      Default
+
+        d.l=sel AND $ff00
+
+        Select d
+
+          Case  #BBM_BASEID
+            Gosub bbm_poll
+
+          Case  #BC_BASEID
+            Gosub bc_poll
+
+          Case  #BT_BASEID
+            Gosub bt_poll
+
+          Case  #BP_BASEID
+            Gosub bp_poll
+
+          Case  #BMS_BASEID
+            Gosub bms_poll
+
+          Case  #ABM_BASEID
+            Gosub abm_poll
+
+          Case  #SR_BASEID
+            Gosub sr_poll
+
+          Case  #ADB_BASEID
+            Gosub adb_poll
+
+          Case  #DR_BASEID
+            Gosub dr_poll
+
+          Case  #QBSB_BASEID
+            Gosub qbsb_poll
+
+          Case  #OSTLP_BASEID
+            Gosub ostlp_poll
+
+          Case  #RIB_BASEID
+            Gosub rib_poll
+
+          Case  #FAE_BASEID
+            Gosub fae_poll
+
+          Case  #FLOOD_BASEID
+            Gosub flood_poll
+
+        End Select
+
+    End Select
+
+  ;more process...
+
+    If kill
+
+  ;attempt to remove all patches...
+
+      trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+
+      For a.l=1 To #NUM_PATCHES
+        flags=patch(a)\exe\flags
+
+        If (flags AND #PF_INSTALLED)
+          flags=unset{flags,#PF_INSTALLED,False}
+          error.l=installpatch{a,flags}
+
+          If error
+            kill=False
+            quit=False
+          End If
+
+        End If
+
+      Next a
+
+      If kill=False
+        read_cfg{"env:FBlit.cfg"}
+
+        For a.l=1 To #NUM_PATCHES           ;install all patches
+          trash.l=installpatch{a,patch(a)\tflags}
+        Next a
+
+        error$="Sorry! It was not possible|"
+        error$+"to quit due to overpatching."
+        doerror{error$}
+
+        Gosub intfc_up
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+      End If
+
+    End If
+
+  Until quit=True
+
+  Gosub close_win
+
+  Return
+
+
+
+
+
+.open_win
+
+    trash.l=MUIset{*mainwin,#MUIA_Window_Open,#MUI_TRUE}
+
+  Return
+
+
+
+
+.close_win
+
+    trash.l=MUIset{*mainwin,#MUIA_Window_Open,#MUI_FALSE}
+
+  Return
+
+
+
+
+
+
+.poll_mui
+
+    If sigs
+      sigs=Wait_(sigs)
+    End If
+
+    tags(0)=#MUIM_Application_NewInput: tags(1)=&sigs
+    tags(2)=#TAG_DONE
+
+    sel.l=DoMethodA{*app,&tags(0)}
+
+  Return
+
+
+
+
+
+.poll_msg
+
+    *com.Message=GetMsg_(*my_port)
+
+    While *com
+
+      If *com\mn_Node\ln_Type<>#NT_REPLYMSG
+
+  ;deal with message
+
+        ReplyMsg_ *com
+      End If
+
+      *com=GetMsg_(*my_port)
+    Wend
+
+  Return
+
+
+
+
+
+
+.intfc_up
+
+    Gosub bbm_intfc
+    Gosub bbm_stats
+
+    Gosub bc_intfc
+    Gosub bc_stats
+
+    Gosub bt_intfc
+    Gosub bt_stats
+
+    Gosub bp_intfc
+    Gosub bp_stats
+
+    Gosub bms_intfc
+    Gosub bms_stats
+
+    Gosub abm_intfc
+    Gosub abm_stats
+
+    Gosub sr_intfc
+    Gosub sr_stats
+
+    Gosub adb_intfc
+    Gosub adb_stats
+
+    Gosub dr_intfc
+    Gosub dr_stats
+
+    Gosub qbsb_intfc
+    Gosub qbsb_stats
+
+    Gosub ostlp_intfc
+    Gosub ostlp_stats
+
+    Gosub rib_intfc
+    Gosub rib_stats
+
+    Gosub fae_intfc
+    Gosub fae_stats
+
+    Gosub flood_intfc
+    Gosub flood_stats
+
+  Return
+
+
+
+.swapfabmlist
+
+  Forbid_
+
+    *di.livelist=patch(7)\exe\passcnt
+    *de.livelist=patch(7)\exe\user0
+
+    temp.l=*di\ll_pntr\sl_list
+    *di\ll_pntr\sl_list=stringlist(#FABM_INCLIST)\ll_pntr\sl_list
+    stringlist(#FABM_INCLIST)\ll_pntr\sl_list=temp
+
+    temp=*di\ll_pntr\sl_size
+    *di\ll_pntr\sl_size=stringlist(#FABM_INCLIST)\ll_pntr\sl_size
+    stringlist(#FABM_INCLIST)\ll_pntr\sl_size=temp
+
+    temp=*di\ll_string\sl_list
+    *di\ll_string\sl_list=stringlist(#FABM_INCLIST)\ll_string\sl_list
+    stringlist(#FABM_INCLIST)\ll_string\sl_list=temp
+
+    temp=*di\ll_string\sl_size
+    *di\ll_string\sl_size=stringlist(#FABM_INCLIST)\ll_string\sl_size
+    stringlist(#FABM_INCLIST)\ll_string\sl_size=temp
+
+    temp.l=*de\ll_pntr\sl_list
+    *de\ll_pntr\sl_list=stringlist(#FABM_EXCLIST)\ll_pntr\sl_list
+    stringlist(#FABM_EXCLIST)\ll_pntr\sl_list=temp
+
+    temp=*de\ll_pntr\sl_size
+    *de\ll_pntr\sl_size=stringlist(#FABM_EXCLIST)\ll_pntr\sl_size
+    stringlist(#FABM_EXCLIST)\ll_pntr\sl_size=temp
+
+    temp=*de\ll_string\sl_list
+    *de\ll_string\sl_list=stringlist(#FABM_EXCLIST)\ll_string\sl_list
+    stringlist(#FABM_EXCLIST)\ll_string\sl_list=temp
+
+    temp=*de\ll_string\sl_size
+    *de\ll_string\sl_size=stringlist(#FABM_EXCLIST)\ll_string\sl_size
+    stringlist(#FABM_EXCLIST)\ll_string\sl_size=temp
+
+  Permit_
+
+  Return

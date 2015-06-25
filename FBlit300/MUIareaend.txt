@@ -1,0 +1,305 @@
+
+;MUI areaend handler
+
+Goto muifaex                  ;skip this code
+
+#FAE=14
+
+
+
+
+.define_fae
+  Data$ "Config","Info","*"
+  Data$ "Installed","Removed","*"
+  Data$ "Active","Disabled","**"
+
+  Dim faef$(32)           ;*** MAX 32 STRINGS!! ***
+
+  Restore define_fae:
+
+  a.l=0
+  b.l=1
+  patch(#FAE)\muisarray[0]=&patch(#FAE)\muispnt[0]
+
+  Repeat
+    Read  faef$(a)
+
+    If Left$(faef$(a),1)="*"
+      patch(#FAE)\muispnt[a]=0
+      patch(#FAE)\muisarray[b]=&patch(#FAE)\muispnt[a+1]
+      b+1
+    Else
+      patch(#FAE)\muispnt[a]=&faef$(a)
+    End If
+
+    a+1
+  Until faef$(a-1)="**"
+
+  Return
+
+
+
+
+
+
+
+
+
+;build mui objects.
+
+.build_fae:
+
+  ;control group
+
+    #FAE_BASEID=$f00           ;fae return id base
+
+    faef1$="Installed:"
+    *faef1._Object=!CheckMark{0}
+
+    #FAE_GAD1=#FAE_BASEID+1
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app._Object               ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#FAE_GAD1}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*faef1,&Macro_Tags(0)}
+
+    faef2$="Activated:"
+    *faef2._Object=!CheckMark{0}
+
+    #FAE_GAD2=#FAE_BASEID+2
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#FAE_GAD2}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*faef2,&Macro_Tags(0)}
+
+    faefg1$="Patch Installation"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{faef1$}}
+    !AddTags{!Child                 ,*faef1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{faef2$}}
+    !AddTags{!Child                 ,*faef2}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&faefg1$}
+    !AddTags{TAG_DONE}
+    *faefg1._Object=!HGroup
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*faefg1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *faefr1._Object=!VGroup
+
+  ;info group
+
+    *faefil1._Object=!Label{patch(#FAE)\version}
+    faefig1$="Version"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*faefil1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&faefig1$}
+    !AddTags{#TAG_DONE}
+    *faefig1._Object=!HGroup
+
+    faefig2$="Stats"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Text}
+    !AddTags{#MUIA_Font             ,#MUIV_Font_Fixed}
+    !AddTags{#TAG_DONE}
+    *faeil1._Object=!Label{"Original Addr:"}
+    *faeit1._Object=!TextObject
+    *faeil2._Object=!Label{"- :"}
+    *faeit2._Object=!TextObject
+    *faeil3._Object=!Label{"Current Addr:"}
+    *faeit3._Object=!TextObject
+    *faeil4._Object=!Label{"- :"}
+    *faeit4._Object=!TextObject
+    *faeil5._Object=!Label{"Patch Code:"}
+    *faeit5._Object=!TextObject
+    *faeil6._Object=!HSpace{0}
+    *faeit6._Object=!HSpace{0}
+    *faeil7._Object=!HSpace{0}
+    *faeit7._Object=!HSpace{0}
+    *faeil8._Object=!HSpace{0}
+    *faeit8._Object=!HSpace{0}
+    faeib1$="Update"
+    *faeib1._Object=!SimpleButton{faeib1$}
+      #FAE_GAD6=#FAE_BASEID+6
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#FAE_GAD6}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*faeib1,&Macro_Tags(0)}
+    faeib2$="Reset"
+    *faeib2._Object=!SimpleButton{faeib2$}
+      #FAE_GAD7=#FAE_BASEID+7
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#FAE_GAD7}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*faeib2,&Macro_Tags(0)}
+    !NewTags{!Child                 ,*faeil1}
+    !AddTags{!Child                 ,*faeit1}
+    !AddTags{!Child                 ,*faeil2}
+    !AddTags{!Child                 ,*faeit2}
+    !AddTags{!Child                 ,*faeil3}
+    !AddTags{!Child                 ,*faeit3}
+    !AddTags{!Child                 ,*faeil4}
+    !AddTags{!Child                 ,*faeit4}
+    !AddTags{!Child                 ,*faeil5}
+    !AddTags{!Child                 ,*faeit5}
+    !AddTags{!Child                 ,*faeil6}
+    !AddTags{!Child                 ,*faeit6}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*faeil7}
+    !AddTags{!Child                 ,*faeit7}
+    !AddTags{!Child                 ,*faeib1}
+    !AddTags{!Child                 ,*faeib2}
+    !AddTags{!Child                 ,*faeil8}
+    !AddTags{!Child                 ,*faeit8}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&faefig2$}
+    !AddTags{#TAG_DONE}
+    *faefig2._Object=!ColGroup{4}
+
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*faefig1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*faefig2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *faefr2._Object=!VGroup
+
+  ;reg group
+
+    !NewTags{!Child                 ,*faefr1}
+    !AddTags{!Child                 ,*faefr2}
+    !AddTags{#TAG_DONE}
+    patch(#FAE)\reg=!RegisterGroup{patch(#FAE)\muisarray[0]}
+
+    If patch(#FAE)\reg=0
+      doerror{"MUI creation failure in AllocMem."}
+      Goto exit
+    Else
+
+  ;help
+      trash=MUIset{*faef1,#MUIA_ShortHelp,&h5$}
+      trash=MUIset{*faef2,#MUIA_ShortHelp,&h6$}
+      trash=MUIset{*faeib1,#MUIA_ShortHelp,&h8$}
+      trash=MUIset{*faeib2,#MUIA_ShortHelp,&h7$}
+    End If
+
+    Gosub fae_intfc
+    Gosub fae_stats
+
+  Return
+
+
+
+
+
+
+;poll fae
+
+.fae_poll
+
+  a.l=0
+
+  Select sel.l
+
+    Case  #FAE_GAD1                 ;install gadget
+      trash.l=GetAttr_(#MUIA_Selected,*faef1,&a)
+      flags.l=patch(#FAE)\exe\flags
+      flags=unset{flags,#PF_INSTALLED,(a=#MUI_TRUE)}
+      error.l=installpatch{#FAE,flags}
+
+      If error
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+        trash.l=MUIset{*faef1,#MUIA_Selected,#MUI_TRUE}
+        a$="FAreaEnd has been overpatched|"
+        a$+"and therefore cannot be removed!"
+        doerror{a$}
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+      Else
+        Gosub fae_stats
+      End If
+
+    Case  #FAE_GAD2                 ;active gadget
+      trash.l=GetAttr_(#MUIA_Selected,*faef2,&a)
+      patch(#FAE)\exe\flags=unset{patch(#FAE)\exe\flags,#PF_ACTIVATED,(a=#MUI_TRUE)}
+
+    Case  #FAE_GAD6                 ;update stats
+      Gosub fae_stats
+
+    Case  #FAE_GAD7                 ;reset stats
+
+      Forbid_
+        patch(#FAE)\exe\fastcnt=0
+        patch(#FAE)\exe\proccnt=0
+        patch(#FAE)\exe\passcnt=0
+      Permit_
+
+      Gosub fae_stats
+
+
+  End Select
+
+  Return
+
+
+
+
+
+
+;update the fae interface
+
+.fae_intfc:
+
+  flags.l=patch(#FAE)\exe\flags
+
+  If (flags AND #PF_INSTALLED)
+    trash.l=MUIset{*faef1,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*faef1,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #PF_ACTIVATED)
+    trash.l=MUIset{*faef2,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*faef2,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  Return
+
+
+
+
+
+;update fae stats
+
+.fae_stats
+
+  Forbid_
+    current.l=Peek.l(patch(#FAE)\base+patch(#FAE)\lvo+2)
+  Permit_
+
+  If patch(#FAE)\exe\flags AND #PF_INSTALLED
+    trash.l=MUIset{*faeit1,#MUIA_Text_Contents,"$"+Hex$(Peek.l(patch(#FAE)\exe\orig+2))}
+  Else
+    trash.l=MUIset{*faeit1,#MUIA_Text_Contents,"$--------"}
+  End If
+
+  trash.l=MUIset{*faeit3,#MUIA_Text_Contents,"$"+Hex$(current)}
+  trash.l=MUIset{*faeit5,#MUIA_Text_Contents,"$"+Hex$(&patch(#FAE)\exe\code)}
+  Return
+
+
+muifaex:

@@ -1,0 +1,392 @@
+
+;MUI QBSBlitPatch handler
+
+Goto muiqbsbx                  ;skip this code
+
+#QBSB=11
+
+
+
+
+.define_qbsb
+  Data$ "Config","Info","*"
+  Data$ "Installed","Removed","*"
+  Data$ "Active","Disabled","*"
+  Data$ "Inline","Beamsync","*"
+  Data$ "Direct","BlitEmu","**"
+
+  Dim qbsbf$(32)           ;*** MAX 32 STRINGS!! ***
+
+  Restore define_qbsb:
+
+  a.l=0
+  b.l=1
+  patch(#QBSB)\muisarray[0]=&patch(#QBSB)\muispnt[0]
+
+  Repeat
+    Read  qbsbf$(a)
+
+    If Left$(qbsbf$(a),1)="*"
+      patch(#QBSB)\muispnt[a]=0
+      patch(#QBSB)\muisarray[b]=&patch(#QBSB)\muispnt[a+1]
+      b+1
+    Else
+      patch(#QBSB)\muispnt[a]=&qbsbf$(a)
+    End If
+
+    a+1
+  Until qbsbf$(a-1)="**"
+
+  Return
+
+
+
+
+
+
+
+
+
+;build mui objects.
+
+.build_qbsb:
+
+  ;control group
+
+    #QBSB_BASEID=$d00           ;qbsb return id base
+
+    qbsbf1$="Installed:"
+    *qbsbf1._Object=!CheckMark{0}
+
+    #QBSB_GAD1=#QBSB_BASEID+1
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app._Object               ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#QBSB_GAD1}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*qbsbf1,&Macro_Tags(0)}
+
+    qbsbf2$="Activated:"
+    *qbsbf2._Object=!CheckMark{0}
+
+    #QBSB_GAD2=#QBSB_BASEID+2
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#QBSB_GAD2}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*qbsbf2,&Macro_Tags(0)}
+
+    qbsbfg1$="Patch Installation"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{qbsbf1$}}
+    !AddTags{!Child                 ,*qbsbf1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{qbsbf2$}}
+    !AddTags{!Child                 ,*qbsbf2}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&qbsbfg1$}
+    !AddTags{TAG_DONE}
+    *qbsbfg1._Object=!HGroup
+
+    *qbsbl1._Object=!Label{"Synchronization"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(#QBSB)\muisarray[3]}
+    !AddTags{#TAG_DONE}
+    *qbsbf3._Object=!CycleObject
+  
+    #QBSB_GAD3=#QBSB_BASEID+3
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#QBSB_GAD3}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*qbsbf3,&Macro_Tags(0)}
+
+    *qbsbl3._Object=!Label{"Rendering"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(#QBSB)\muisarray[4]}
+    !AddTags{#TAG_DONE}
+    *qbsbf5._Object=!CycleObject
+
+    #QBSB_GAD5=#QBSB_BASEID+5
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#QBSB_GAD5}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*qbsbf5,&Macro_Tags(0)}
+
+    qbsbfg2$="Patch Operation"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&qbsbfg2$}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*qbsbl1}
+    !AddTags{!Child                 ,*qbsbf3}
+    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{!Child                 ,*qbsbl3}
+;    !AddTags{!Child                 ,*qbsbf5}
+;    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *qbsbfg2._Object=!ColGroup{4}
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*qbsbfg1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*qbsbfg2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *qbsbfr1._Object=!VGroup
+
+  ;info group
+
+    *qbsbfil1._Object=!Label{patch(#QBSB)\version}
+    qbsbfig1$="Version"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*qbsbfil1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&qbsbfig1$}
+    !AddTags{#TAG_DONE}
+    *qbsbfig1._Object=!HGroup
+
+    qbsbfig2$="Stats"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Text}
+    !AddTags{#MUIA_Font             ,#MUIV_Font_Fixed}
+    !AddTags{#TAG_DONE}
+    *qbsbil1._Object=!Label{"Original Addr:"}
+    *qbsbit1._Object=!TextObject
+    *qbsbil2._Object=!Label{"- :"}
+    *qbsbit2._Object=!TextObject
+    *qbsbil3._Object=!Label{"Current Addr:"}
+    *qbsbit3._Object=!TextObject
+    *qbsbil4._Object=!Label{"- :"}
+    *qbsbit4._Object=!TextObject
+    *qbsbil5._Object=!Label{"Patch Code:"}
+    *qbsbit5._Object=!TextObject
+    *qbsbil6._Object=!HSpace{0}
+    *qbsbit6._Object=!HSpace{0}
+    *qbsbil7._Object=!HSpace{0}
+    *qbsbit7._Object=!HSpace{0}
+    *qbsbil8._Object=!HSpace{0}
+    *qbsbit8._Object=!HSpace{0}
+    qbsbib1$="Update"
+    *qbsbib1._Object=!SimpleButton{qbsbib1$}
+      #QBSB_GAD6=#QBSB_BASEID+6
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#QBSB_GAD6}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*qbsbib1,&Macro_Tags(0)}
+    qbsbib2$="Reset"
+    *qbsbib2._Object=!SimpleButton{qbsbib2$}
+      #QBSB_GAD7=#QBSB_BASEID+7
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#QBSB_GAD7}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*qbsbib2,&Macro_Tags(0)}
+    !NewTags{!Child                 ,*qbsbil1}
+    !AddTags{!Child                 ,*qbsbit1}
+    !AddTags{!Child                 ,*qbsbil2}
+    !AddTags{!Child                 ,*qbsbit2}
+    !AddTags{!Child                 ,*qbsbil3}
+    !AddTags{!Child                 ,*qbsbit3}
+    !AddTags{!Child                 ,*qbsbil4}
+    !AddTags{!Child                 ,*qbsbit4}
+    !AddTags{!Child                 ,*qbsbil5}
+    !AddTags{!Child                 ,*qbsbit5}
+    !AddTags{!Child                 ,*qbsbil6}
+    !AddTags{!Child                 ,*qbsbit6}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*qbsbil7}
+    !AddTags{!Child                 ,*qbsbit7}
+    !AddTags{!Child                 ,*qbsbib1}
+    !AddTags{!Child                 ,*qbsbib2}
+    !AddTags{!Child                 ,*qbsbil8}
+    !AddTags{!Child                 ,*qbsbit8}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&qbsbfig2$}
+    !AddTags{#TAG_DONE}
+    *qbsbfig2._Object=!ColGroup{4}
+
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*qbsbfig1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*qbsbfig2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *qbsbfr2._Object=!VGroup
+
+  ;reg group
+
+    !NewTags{!Child                 ,*qbsbfr1}
+    !AddTags{!Child                 ,*qbsbfr2}
+    !AddTags{#TAG_DONE}
+    patch(#QBSB)\reg=!RegisterGroup{patch(#QBSB)\muisarray[0]}
+
+    If patch(#QBSB)\reg=0
+      doerror{"MUI creation failure in QBSBlitPatch."}
+      Goto exit
+    Else
+
+  ;help
+      trash=MUIset{*qbsbf1,#MUIA_ShortHelp,&h5$}
+      trash=MUIset{*qbsbf2,#MUIA_ShortHelp,&h6$}
+      trash=MUIset{*qbsbib1,#MUIA_ShortHelp,&h8$}
+      trash=MUIset{*qbsbib2,#MUIA_ShortHelp,&h7$}
+      trash=MUIset{*qbsbf3,#MUIA_ShortHelp,&h28$}
+      trash=MUIset{*qbsbf5,#MUIA_ShortHelp,&h29$}
+    End If
+
+    Gosub qbsb_intfc
+    Gosub qbsb_stats
+
+  Return
+
+
+
+
+
+
+;poll qbsb
+
+.qbsb_poll
+
+  a.l=0
+
+  Select sel.l
+
+    Case  #QBSB_GAD1                 ;install gadget
+      trash.l=GetAttr_(#MUIA_Selected,*qbsbf1,&a)
+      flags.l=patch(#QBSB)\exe\flags
+      flags=unset{flags,#PF_INSTALLED,(a=#MUI_TRUE)}
+      error.l=installpatch{#QBSB,flags}
+
+      If error
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+        trash.l=MUIset{*qbsbf1,#MUIA_Selected,#MUI_TRUE}
+        a$="AddBobPatch has been overpatched|"
+        a$+"and therefore cannot be removed!"
+        doerror{a$}
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+      Else
+        Gosub qbsb_stats
+      End If
+
+    Case  #QBSB_GAD2                 ;active gadget
+      trash.l=GetAttr_(#MUIA_Selected,*qbsbf2,&a)
+      patch(#QBSB)\exe\flags=unset{patch(#QBSB)\exe\flags,#PF_ACTIVATED,(a=#MUI_TRUE)}
+
+    Case  #QBSB_GAD3                 ;sync
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*qbsbf3,&a)
+
+      flags=patch(#QBSB)\exe\flags
+      flags=unset{flags,#QBSBF_SYNC,(a=1)}
+      patch(#QBSB)\exe\flags=flags
+                                                                                                                               
+
+    Case  #QBSB_GAD5                 ;render
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*qbsbf5,&a)
+
+      flags=patch(#QBSB)\exe\flags
+      flags=unset{flags,#QBSBF_BLITEMU,(a=1)}
+      patch(#QBSB)\exe\flags=flags
+
+    Case  #QBSB_GAD6                 ;update stats
+      Gosub qbsb_stats
+
+    Case  #QBSB_GAD7                 ;reset stats
+
+      Forbid_
+        patch(#QBSB)\exe\fastcnt=0
+        patch(#QBSB)\exe\proccnt=0
+        patch(#QBSB)\exe\passcnt=0
+      Permit_
+
+      Gosub qbsb_stats
+
+
+  End Select
+
+  Return
+
+
+
+
+
+
+;update the qbsb interface
+
+.qbsb_intfc:
+
+  flags.l=patch(#QBSB)\exe\flags
+
+  If (flags AND #PF_INSTALLED)
+    trash.l=MUIset{*qbsbf1,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*qbsbf1,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #PF_ACTIVATED)
+    trash.l=MUIset{*qbsbf2,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*qbsbf2,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #QBSBF_SYNC)
+    a.l=1
+  Else
+    a.l=0
+  End If
+
+  trash.l=MUIset{*qbsbf3,#MUIA_Cycle_Active,a}
+  
+  If (flags AND #QBSBF_BLITEMU)
+    a.l=1
+  Else
+    a.l=0
+  End If
+
+  trash.l=MUIset{*qbsbf5,#MUIA_Cycle_Active,a}
+                                                                                                                               
+  Return
+
+
+
+
+
+;update qbsb stats
+
+.qbsb_stats
+
+  Forbid_
+    current.l=Peek.l(patch(#QBSB)\base+patch(#QBSB)\lvo+2)
+;    fast.l=patch(#QBSB)\exe\fastcnt
+;    pass.l=patch(#QBSB)\exe\passcnt
+;    proc.l=patch(#QBSB)\exe\proccnt
+  Permit_
+
+  If patch(#QBSB)\exe\flags AND #PF_INSTALLED
+    trash.l=MUIset{*qbsbit1,#MUIA_Text_Contents,"$"+Hex$(Peek.l(patch(#QBSB)\exe\orig+2))}
+  Else
+    trash.l=MUIset{*qbsbit1,#MUIA_Text_Contents,"$--------"}
+  End If
+
+;  total.l=pass+proc
+;  trash.l=MUIset{*qbsbit2,#MUIA_Text_Contents,"$"+Hex$(fast)}
+  trash.l=MUIset{*qbsbit3,#MUIA_Text_Contents,"$"+Hex$(current)}
+;  trash.l=MUIset{*qbsbit4,#MUIA_Text_Contents,"$"+Hex$(proc)}
+  trash.l=MUIset{*qbsbit5,#MUIA_Text_Contents,"$"+Hex$(&patch(#QBSB)\exe\code)}
+;  trash.l=MUIset{*qbsbit6,#MUIA_Text_Contents,"$"+Hex$(pass)}
+;  trash.l=MUIset{*qbsbit7,#MUIA_Text_Contents,"$"+Hex$(proc)}
+;  trash.l=MUIset{*qbsbit8,#MUIA_Text_Contents,"$"+Hex$(total)}
+
+  Return
+
+
+muiqbsbx:

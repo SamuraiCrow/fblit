@@ -1,0 +1,359 @@
+
+;MUI addbob handler
+
+Goto muiadbx                  ;skip this code
+
+#ADB=9
+
+
+
+
+.define_adb
+  Data$ "Config","Info","*"
+  Data$ "Installed","Removed","*"
+  Data$ "Active","Disabled","**"
+
+  Dim adbf$(32)           ;*** MAX 32 STRINGS!! ***
+
+  Restore define_adb:
+
+  a.l=0
+  b.l=1
+  patch(#ADB)\muisarray[0]=&patch(#ADB)\muispnt[0]
+
+  Repeat
+    Read  adbf$(a)
+
+    If Left$(adbf$(a),1)="*"
+      patch(#ADB)\muispnt[a]=0
+      patch(#ADB)\muisarray[b]=&patch(#ADB)\muispnt[a+1]
+      b+1
+    Else
+      patch(#ADB)\muispnt[a]=&adbf$(a)
+    End If
+
+    a+1
+  Until adbf$(a-1)="**"
+
+  Return
+
+
+
+
+
+
+
+
+
+;build mui objects.
+
+.build_adb:
+
+  ;control group
+
+    #ADB_BASEID=$a00           ;adb return id base
+
+    adbf1$="Installed:"
+    *adbf1._Object=!CheckMark{0}
+
+    #ADB_GAD1=#ADB_BASEID+1
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app._Object               ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#ADB_GAD1}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*adbf1,&Macro_Tags(0)}
+
+    adbf2$="Activated:"
+    *adbf2._Object=!CheckMark{0}
+
+    #ADB_GAD2=#ADB_BASEID+2
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#ADB_GAD2}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*adbf2,&Macro_Tags(0)}
+
+    adbfg1$="Patch Installation"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{adbf1$}}
+    !AddTags{!Child                 ,*adbf1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{adbf2$}}
+    !AddTags{!Child                 ,*adbf2}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&adbfg1$}
+    !AddTags{TAG_DONE}
+    *adbfg1._Object=!HGroup
+
+;    *adbl3._Object=!Label{"Fast Data Options"}
+;    !NewTags{#MUIA_Cycle_Entries    ,patch(#ADB)\muisarray[3]}
+;    !AddTags{#TAG_DONE}
+;    *adbf5._Object=!CycleObject
+;
+;    #ADB_GAD5=#ADB_BASEID+5
+;    !NewTags{#MUIM_Notify}
+;    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+;    !AddTags{*app                       ,2}
+;    !AddTags{#MUIM_Application_ReturnID ,#ADB_GAD5}
+;    !AddTags{#TAG_DONE}
+;    trash.l=DoMethodA{*adbf5,&Macro_Tags(0)}
+;
+;    adbfg2$="Patch Operation"
+;    !NewTags{#MUIA_Fradbe            ,#MUIV_Fradbe_Group}
+;    !AddTags{#MUIA_FradbeTitle       ,&adbfg2$}
+;    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{!Child                 ,*adbl3}
+;    !AddTags{!Child                 ,*adbf5}
+;    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{#TAG_DONE}
+;    *adbfg2._Object=!ColGroup{4}
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*adbfg1}
+    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{!Child                 ,*adbfg2}
+;    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *adbfr1._Object=!VGroup
+
+  ;info group
+
+    *adbfil1._Object=!Label{patch(#ADB)\version}
+    adbfig1$="Version"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*adbfil1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&adbfig1$}
+    !AddTags{#TAG_DONE}
+    *adbfig1._Object=!HGroup
+
+    adbfig2$="Stats"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Text}
+    !AddTags{#MUIA_Font             ,#MUIV_Font_Fixed}
+    !AddTags{#TAG_DONE}
+    *adbil1._Object=!Label{"Original Addr:"}
+    *adbit1._Object=!TextObject
+    *adbil2._Object=!Label{"- :"}
+    *adbit2._Object=!TextObject
+    *adbil3._Object=!Label{"Current Addr:"}
+    *adbit3._Object=!TextObject
+    *adbil4._Object=!Label{"- :"}
+    *adbit4._Object=!TextObject
+    *adbil5._Object=!Label{"Patch Code:"}
+    *adbit5._Object=!TextObject
+    *adbil6._Object=!HSpace{0}
+    *adbit6._Object=!HSpace{0}
+    *adbil7._Object=!HSpace{0}
+    *adbit7._Object=!HSpace{0}
+    *adbil8._Object=!HSpace{0}
+    *adbit8._Object=!HSpace{0}
+    adbib1$="Update"
+    *adbib1._Object=!SimpleButton{adbib1$}
+      #ADB_GAD6=#ADB_BASEID+6
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ADB_GAD6}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*adbib1,&Macro_Tags(0)}
+    adbib2$="Reset"
+    *adbib2._Object=!SimpleButton{adbib2$}
+      #ADB_GAD7=#ADB_BASEID+7
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ADB_GAD7}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*adbib2,&Macro_Tags(0)}
+    !NewTags{!Child                 ,*adbil1}
+    !AddTags{!Child                 ,*adbit1}
+    !AddTags{!Child                 ,*adbil2}
+    !AddTags{!Child                 ,*adbit2}
+    !AddTags{!Child                 ,*adbil3}
+    !AddTags{!Child                 ,*adbit3}
+    !AddTags{!Child                 ,*adbil4}
+    !AddTags{!Child                 ,*adbit4}
+    !AddTags{!Child                 ,*adbil5}
+    !AddTags{!Child                 ,*adbit5}
+    !AddTags{!Child                 ,*adbil6}
+    !AddTags{!Child                 ,*adbit6}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*adbil7}
+    !AddTags{!Child                 ,*adbit7}
+    !AddTags{!Child                 ,*adbib1}
+    !AddTags{!Child                 ,*adbib2}
+    !AddTags{!Child                 ,*adbil8}
+    !AddTags{!Child                 ,*adbit8}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&adbfig2$}
+    !AddTags{#TAG_DONE}
+    *adbfig2._Object=!ColGroup{4}
+
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*adbfig1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*adbfig2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *adbfr2._Object=!VGroup
+
+  ;reg group
+
+    !NewTags{!Child                 ,*adbfr1}
+    !AddTags{!Child                 ,*adbfr2}
+    !AddTags{#TAG_DONE}
+    patch(#ADB)\reg=!RegisterGroup{patch(#ADB)\muisarray[0]}
+
+    If patch(#ADB)\reg=0
+      doerror{"MUI creation failure in AllocMem."}
+      Goto exit
+    Else
+
+  ;help
+      trash=MUIset{*adbf1,#MUIA_ShortHelp,&h5$}
+      trash=MUIset{*adbf2,#MUIA_ShortHelp,&h6$}
+      trash=MUIset{*adbib1,#MUIA_ShortHelp,&h8$}
+      trash=MUIset{*adbib2,#MUIA_ShortHelp,&h7$}
+;      trash=MUIset{*adbf5,#MUIA_ShortHelp,&h14$}
+    End If
+
+    Gosub adb_intfc
+    Gosub adb_stats
+
+  Return
+
+
+
+
+
+
+;poll adb
+
+.adb_poll
+
+  a.l=0
+
+  Select sel.l
+
+    Case  #ADB_GAD1                 ;install gadget
+      trash.l=GetAttr_(#MUIA_Selected,*adbf1,&a)
+      flags.l=patch(#ADB)\exe\flags
+      flags=unset{flags,#PF_INSTALLED,(a=#MUI_TRUE)}
+      error.l=installpatch{#ADB,flags}
+
+      If error
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+        trash.l=MUIset{*adbf1,#MUIA_Selected,#MUI_TRUE}
+        a$="AddBobPatch has been overpatched|"
+        a$+"and therefore cannot be removed!"
+        doerror{a$}
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+      Else
+        Gosub adb_stats
+      End If
+
+    Case  #ADB_GAD2                 ;active gadget
+      trash.l=GetAttr_(#MUIA_Selected,*adbf2,&a)
+      patch(#ADB)\exe\flags=unset{patch(#ADB)\exe\flags,#PF_ACTIVATED,(a=#MUI_TRUE)}
+
+;    Case  #ADB_GAD5                 ;fast option
+;      trash.l=GetAttr_(#MUIA_Cycle_Active,*adbf5,&a)
+;
+;      flags=patch(#ADB)\exe\flags
+;      flags=unset{flags,#ADBF_FPASSON,(a=0)}
+;      flags=unset{flags,#ADBF_FDISCARD,(a=1)}
+;      patch(#ADB)\exe\flags=flags
+
+    Case  #ADB_GAD6                 ;update stats
+      Gosub adb_stats
+
+    Case  #ADB_GAD7                 ;reset stats
+
+      Forbid_
+        patch(#ADB)\exe\fastcnt=0
+        patch(#ADB)\exe\proccnt=0
+        patch(#ADB)\exe\passcnt=0
+      Permit_
+
+      Gosub adb_stats
+
+
+  End Select
+
+  Return
+
+
+
+
+
+
+;update the adb interface
+
+.adb_intfc:
+
+  flags.l=patch(#ADB)\exe\flags
+
+  If (flags AND #PF_INSTALLED)
+    trash.l=MUIset{*adbf1,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*adbf1,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #PF_ACTIVATED)
+    trash.l=MUIset{*adbf2,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*adbf2,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+;  If (flags AND #ADBF_FPASSON)
+;    a.l=0
+;  End If
+;
+;  If (flags AND #ADBF_FDISCARD)
+;    a.l=1
+;  End If
+;
+;  trash.l=MUIset{*adbf5,#MUIA_Cycle_Active,a}
+
+  Return
+
+
+
+
+
+;update adb stats
+
+.adb_stats
+
+  Forbid_
+    current.l=Peek.l(patch(#ADB)\base+patch(#ADB)\lvo+2)
+;    fast.l=patch(#ADB)\exe\fastcnt
+;    pass.l=patch(#ADB)\exe\passcnt
+;    proc.l=patch(#ADB)\exe\proccnt
+  Permit_
+
+  If patch(#ADB)\exe\flags AND #PF_INSTALLED
+    trash.l=MUIset{*adbit1,#MUIA_Text_Contents,"$"+Hex$(Peek.l(patch(#ADB)\exe\orig+2))}
+  Else
+    trash.l=MUIset{*adbit1,#MUIA_Text_Contents,"$--------"}
+  End If
+
+;  total.l=pass+proc
+;  trash.l=MUIset{*adbit2,#MUIA_Text_Contents,"$"+Hex$(fast)}
+  trash.l=MUIset{*adbit3,#MUIA_Text_Contents,"$"+Hex$(current)}
+;  trash.l=MUIset{*adbit4,#MUIA_Text_Contents,"$"+Hex$(proc)}
+  trash.l=MUIset{*adbit5,#MUIA_Text_Contents,"$"+Hex$(&patch(#ADB)\exe\code)}
+;  trash.l=MUIset{*adbit6,#MUIA_Text_Contents,"$"+Hex$(pass)}
+;  trash.l=MUIset{*adbit7,#MUIA_Text_Contents,"$"+Hex$(proc)}
+;  trash.l=MUIset{*adbit8,#MUIA_Text_Contents,"$"+Hex$(total)}
+
+  Return
+
+
+muiadbx:

@@ -1,0 +1,215 @@
+
+
+;startup stuff
+
+.startup:
+
+
+
+;check execV39+/020+
+
+.chk_exe_mpu:
+
+  If Processor<2 OR ExecVersion<39
+    doerror{"You failed the hardware test!|020+ and V39+ are required."}
+    Goto exit
+  End If
+
+
+
+
+
+
+;get programme and version
+
+.prog_ver:
+
+  Restore version
+  Read version$
+
+  prog$=param{version$,2,$20,0}
+  ver$=param{version$,3,$20,0}
+  title$=prog$+" "+ver$+Chr$(0)
+
+
+
+
+
+;build MUI application object
+
+.MUI_stuff:
+
+  ;Go all MUI on everyone...
+
+  ;app
+
+    ad$="OS mutilation utility."
+    ac$="(c) Stephen Brookes 1997-98"
+    tp$=prog$
+
+    !NewTags{#MUIA_Application_Title          ,&prog$}
+    !AddTags{#MUIA_Application_Version        ,&version$}
+    !AddTags{#MUIA_Application_Author         ,&author$}
+    !AddTags{#MUIA_Application_Description    ,&ad$}
+    !AddTags{#MUIA_Application_Base           ,&tp$}
+    !AddTags{#MUIA_Application_Copyright      ,&ac$}
+    !AddTags{#MUIA_Application_SingleTask     ,#MUI_TRUE}
+    !AddTags{#MUIA_Application_UseCommodities ,#MUI_FALSE}
+    !AddTags{#TAG_DONE}
+
+    *app=!ApplicationObject
+
+
+  If *app=0
+    Goto exit
+  End If
+
+
+
+
+
+
+;open message port
+
+.open_port
+
+  *my_port.MsgPort=0
+
+  Forbid_
+    *fblit.MsgPort=FindPort_("FBlit")                      ;FBlit running?
+
+    If *fblit=0
+      doerror{"Execute FBlit twice to run FBlitGUI"}
+    Else
+      *my_port.MsgPort=CreateMsgPort_
+    End If
+
+  Permit_
+
+  If (*my_port=0) OR (*fblit=0)
+    Goto exit
+  End If
+
+
+
+
+
+
+
+;set up the patches
+
+.setpatch:
+
+  mess.fblitmess\fm_msg\mn_ReplyPort=*my_port
+  mess\fm_msg\mn_Length=SizeOf.fblitmess
+
+
+  ;send activate message
+
+  mess\fm_msg\mn_Node\ln_Type=#NT_MESSAGE
+  mess\fm_command=#FM_GUIACT
+
+  PutMsg_ *fblit,&mess
+
+  *com.Message=0
+
+  While *com<>&mess
+    WaitPort_(*my_port)
+    *com=GetMsg_(*my_port)
+
+    If *com\mn_Node\ln_Type<>#NT_REPLYMSG
+      ReplyMsg_ *com
+    End If
+
+  Wend
+
+
+  ;fetch array base
+
+  mess\fm_msg\mn_Node\ln_Type=#NT_MESSAGE
+  mess\fm_command=#FM_ARRAYBASE
+
+  PutMsg_ *fblit,&mess
+
+  Repeat
+    WaitPort_(*my_port)
+    *com=GetMsg_(*my_port)
+
+    If *com\mn_Node\ln_Type<>#NT_REPLYMSG
+      ReplyMsg_ *com
+    End If
+
+  Until *com=&mess
+
+
+  arraybase.l=mess\fm_task
+
+  CopyMem_ arraybase,&patch(0),(#NUM_PATCHES+1)*SizeOf.pathigh
+  read_cfg{"ENV:FBlit.cfg"}
+
+  Gosub define_bbm
+  Gosub define_bc
+  Gosub define_bt
+  Gosub define_bp
+  Gosub define_bms
+  Gosub define_abm
+  Gosub define_sr
+  Gosub define_adb
+  Gosub define_dr
+  Gosub define_qbsb
+  Gosub define_ostlp
+  Gosub define_rib
+  Gosub define_fae
+  Gosub define_flood
+
+
+
+;build tasklist
+
+.tasklist
+
+  Forbid_
+
+  freelist{&stringlist(#TASK_LIST),True}
+  *tasklog.loglist=patch(7)\exe\user2
+
+;  ObtainSemaphore_(&*tasklog\ll_arb)
+
+    *curnode.Node=*tasklog\ll_list\lh_Head
+
+    While *curnode\ln_Succ
+
+      If (*curnode\ln_Name)>0
+        a$=Peek$(*curnode\ln_Name)
+
+        If a$<>""
+          trash.l=addmember{a$,&stringlist(#TASK_LIST),False}
+        End If
+
+      End If
+
+      *curnode=*curnode\ln_Succ
+
+    Wend
+
+
+;  ReleaseSemaphore_(&*tasklog\ll_arb)
+
+  Permit_
+
+
+;setup mui interface
+
+.MUIsetup:
+
+  ;build main interface
+
+  Gosub MUImain
+
+  If *mainwin=0
+    Goto exit
+  End If
+
+
+  Return
+

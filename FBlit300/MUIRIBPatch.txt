@@ -1,0 +1,358 @@
+
+;MUI remibob handler
+
+Goto muiribx                  ;skip this code
+
+#RIB=13
+
+
+
+
+.define_rib
+  Data$ "Config","Info","*"
+  Data$ "Installed","Removed","*"
+  Data$ "Active","Disabled","**"
+
+  Dim ribf$(32)           ;*** MAX 32 STRINGS!! ***
+
+  Restore define_rib:
+
+  a.l=0
+  b.l=1
+  patch(#RIB)\muisarray[0]=&patch(#RIB)\muispnt[0]
+
+  Repeat
+    Read  ribf$(a)
+
+    If Left$(ribf$(a),1)="*"
+      patch(#RIB)\muispnt[a]=0
+      patch(#RIB)\muisarray[b]=&patch(#RIB)\muispnt[a+1]
+      b+1
+    Else
+      patch(#RIB)\muispnt[a]=&ribf$(a)
+    End If
+
+    a+1
+  Until ribf$(a-1)="**"
+
+  Return
+
+
+
+
+
+
+
+
+
+;build mui objects.
+
+.build_rib:
+
+  ;control group
+
+    #RIB_BASEID=$e00           ;rib return id base
+
+    ribf1$="Installed:"
+    *ribf1._Object=!CheckMark{0}
+
+    #RIB_GAD1=#RIB_BASEID+1
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app._Object               ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#RIB_GAD1}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*ribf1,&Macro_Tags(0)}
+
+    ribf2$="Activated:"
+    *ribf2._Object=!CheckMark{0}
+
+    #RIB_GAD2=#RIB_BASEID+2
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#RIB_GAD2}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*ribf2,&Macro_Tags(0)}
+
+    ribfg1$="Patch Installation"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{ribf1$}}
+    !AddTags{!Child                 ,*ribf1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{ribf2$}}
+    !AddTags{!Child                 ,*ribf2}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&ribfg1$}
+    !AddTags{TAG_DONE}
+    *ribfg1._Object=!HGroup
+
+;    *ribl3._Object=!Label{"Fast Data Options"}
+;    !NewTags{#MUIA_Cycle_Entries    ,patch(#RIB)\muisarray[3]}
+;    !AddTags{#TAG_DONE}
+;    *ribf5._Object=!CycleObject
+;
+;    #RIB_GAD5=#RIB_BASEID+5
+;    !NewTags{#MUIM_Notify}
+;    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+;    !AddTags{*app                       ,2}
+;    !AddTags{#MUIM_Application_ReturnID ,#RIB_GAD5}
+;    !AddTags{#TAG_DONE}
+;    trash.l=DoMethodA{*ribf5,&Macro_Tags(0)}
+;
+;    ribfg2$="Patch Operation"
+;    !NewTags{#MUIA_Frribe            ,#MUIV_Frribe_Group}
+;    !AddTags{#MUIA_FrribeTitle       ,&ribfg2$}
+;    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{!Child                 ,*ribl3}
+;    !AddTags{!Child                 ,*ribf5}
+;    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{#TAG_DONE}
+;    *ribfg2._Object=!ColGroup{4}
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*ribfg1}
+    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{!Child                 ,*ribfg2}
+;    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *ribfr1._Object=!VGroup
+
+  ;info group
+
+    *ribfil1._Object=!Label{patch(#RIB)\version}
+    ribfig1$="Version"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*ribfil1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&ribfig1$}
+    !AddTags{#TAG_DONE}
+    *ribfig1._Object=!HGroup
+
+    ribfig2$="Stats"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Text}
+    !AddTags{#MUIA_Font             ,#MUIV_Font_Fixed}
+    !AddTags{#TAG_DONE}
+    *ribil1._Object=!Label{"Original Addr:"}
+    *ribit1._Object=!TextObject
+    *ribil2._Object=!Label{"- :"}
+    *ribit2._Object=!TextObject
+    *ribil3._Object=!Label{"Current Addr:"}
+    *ribit3._Object=!TextObject
+    *ribil4._Object=!Label{"- :"}
+    *ribit4._Object=!TextObject
+    *ribil5._Object=!Label{"Patch Code:"}
+    *ribit5._Object=!TextObject
+    *ribil6._Object=!HSpace{0}
+    *ribit6._Object=!HSpace{0}
+    *ribil7._Object=!HSpace{0}
+    *ribit7._Object=!HSpace{0}
+    *ribil8._Object=!HSpace{0}
+    *ribit8._Object=!HSpace{0}
+    ribib1$="Update"
+    *ribib1._Object=!SimpleButton{ribib1$}
+      #RIB_GAD6=#RIB_BASEID+6
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#RIB_GAD6}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*ribib1,&Macro_Tags(0)}
+    ribib2$="Reset"
+    *ribib2._Object=!SimpleButton{ribib2$}
+      #RIB_GAD7=#RIB_BASEID+7
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#RIB_GAD7}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*ribib2,&Macro_Tags(0)}
+    !NewTags{!Child                 ,*ribil1}
+    !AddTags{!Child                 ,*ribit1}
+    !AddTags{!Child                 ,*ribil2}
+    !AddTags{!Child                 ,*ribit2}
+    !AddTags{!Child                 ,*ribil3}
+    !AddTags{!Child                 ,*ribit3}
+    !AddTags{!Child                 ,*ribil4}
+    !AddTags{!Child                 ,*ribit4}
+    !AddTags{!Child                 ,*ribil5}
+    !AddTags{!Child                 ,*ribit5}
+    !AddTags{!Child                 ,*ribil6}
+    !AddTags{!Child                 ,*ribit6}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*ribil7}
+    !AddTags{!Child                 ,*ribit7}
+    !AddTags{!Child                 ,*ribib1}
+    !AddTags{!Child                 ,*ribib2}
+    !AddTags{!Child                 ,*ribil8}
+    !AddTags{!Child                 ,*ribit8}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&ribfig2$}
+    !AddTags{#TAG_DONE}
+    *ribfig2._Object=!ColGroup{4}
+
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*ribfig1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*ribfig2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *ribfr2._Object=!VGroup
+
+  ;reg group
+
+    !NewTags{!Child                 ,*ribfr1}
+    !AddTags{!Child                 ,*ribfr2}
+    !AddTags{#TAG_DONE}
+    patch(#RIB)\reg=!RegisterGroup{patch(#RIB)\muisarray[0]}
+
+    If patch(#RIB)\reg=0
+      doerror{"MUI creation failure in AllocMem."}
+      Goto exit
+    Else
+
+  ;help
+      trash=MUIset{*ribf1,#MUIA_ShortHelp,&h5$}
+      trash=MUIset{*ribf2,#MUIA_ShortHelp,&h6$}
+      trash=MUIset{*ribib1,#MUIA_ShortHelp,&h8$}
+      trash=MUIset{*ribib2,#MUIA_ShortHelp,&h7$}
+;      trash=MUIset{*ribf5,#MUIA_ShortHelp,&h14$}
+    End If
+
+    Gosub rib_intfc
+    Gosub rib_stats
+
+  Return
+
+
+
+
+
+
+;poll rib
+
+.rib_poll
+
+  a.l=0
+  Select sel.l
+
+    Case  #RIB_GAD1                 ;install gadget
+      trash.l=GetAttr_(#MUIA_Selected,*ribf1,&a)
+      flags.l=patch(#RIB)\exe\flags
+      flags=unset{flags,#PF_INSTALLED,(a=#MUI_TRUE)}
+      error.l=installpatch{#RIB,flags}
+
+      If error
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+        trash.l=MUIset{*ribf1,#MUIA_Selected,#MUI_TRUE}
+        a$="RemIBobPatch has been overpatched|"
+        a$+"and therefore cannot be removed!"
+        doerror{a$}
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+      Else
+        Gosub rib_stats
+      End If
+
+    Case  #RIB_GAD2                 ;active gadget
+      trash.l=GetAttr_(#MUIA_Selected,*ribf2,&a)
+      patch(#RIB)\exe\flags=unset{patch(#RIB)\exe\flags,#PF_ACTIVATED,(a=#MUI_TRUE)}
+
+;    Case  #RIB_GAD5                 ;fast option
+;      trash.l=GetAttr_(#MUIA_Cycle_Active,*ribf5,&a)
+;
+;      flags=patch(#RIB)\exe\flags
+;      flags=unset{flags,#RIBF_FPASSON,(a=0)}
+;      flags=unset{flags,#RIBF_FDISCARD,(a=1)}
+;      patch(#RIB)\exe\flags=flags
+
+    Case  #RIB_GAD6                 ;update stats
+      Gosub rib_stats
+
+    Case  #RIB_GAD7                 ;reset stats
+
+      Forbid_
+        patch(#RIB)\exe\fastcnt=0
+        patch(#RIB)\exe\proccnt=0
+        patch(#RIB)\exe\passcnt=0
+      Permit_
+
+      Gosub rib_stats
+
+
+  End Select
+
+  Return
+
+
+
+
+
+
+;update the rib interface
+
+.rib_intfc:
+
+  flags.l=patch(#RIB)\exe\flags
+
+  If (flags AND #PF_INSTALLED)
+    trash.l=MUIset{*ribf1,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*ribf1,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #PF_ACTIVATED)
+    trash.l=MUIset{*ribf2,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*ribf2,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+;  If (flags AND #RIBF_FPASSON)
+;    a.l=0
+;  End If
+;
+;  If (flags AND #RIBF_FDISCARD)
+;    a.l=1
+;  End If
+;
+;  trash.l=MUIset{*ribf5,#MUIA_Cycle_Active,a}
+
+  Return
+
+
+
+
+
+;update rib stats
+
+.rib_stats
+
+  Forbid_
+    current.l=Peek.l(patch(#RIB)\base+patch(#RIB)\lvo+2)
+;    fast.l=patch(#RIB)\exe\fastcnt
+;    pass.l=patch(#RIB)\exe\passcnt
+;    proc.l=patch(#RIB)\exe\proccnt
+  Permit_
+
+  If patch(#RIB)\exe\flags AND #PF_INSTALLED
+    trash.l=MUIset{*ribit1,#MUIA_Text_Contents,"$"+Hex$(Peek.l(patch(#RIB)\exe\orig+2))}
+  Else
+    trash.l=MUIset{*ribit1,#MUIA_Text_Contents,"$--------"}
+  End If
+
+;  total.l=pass+proc
+;  trash.l=MUIset{*ribit2,#MUIA_Text_Contents,"$"+Hex$(fast)}
+  trash.l=MUIset{*ribit3,#MUIA_Text_Contents,"$"+Hex$(current)}
+;  trash.l=MUIset{*ribit4,#MUIA_Text_Contents,"$"+Hex$(proc)}
+  trash.l=MUIset{*ribit5,#MUIA_Text_Contents,"$"+Hex$(&patch(#RIB)\exe\code)}
+;  trash.l=MUIset{*ribit6,#MUIA_Text_Contents,"$"+Hex$(pass)}
+;  trash.l=MUIset{*ribit7,#MUIA_Text_Contents,"$"+Hex$(proc)}
+;  trash.l=MUIset{*ribit8,#MUIA_Text_Contents,"$"+Hex$(total)}
+
+  Return
+
+
+muiribx:

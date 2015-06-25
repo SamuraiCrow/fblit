@@ -1,0 +1,652 @@
+
+WBStartup
+
+version:
+  Data$   "$VER: FBlit 3.79 (20.09.2001) Stephen Brookes"
+  Data.b  0
+
+  *execbase.ExecBase=Peek.l(4)
+
+  cpu.l=*execbase\AttnFlags AND $0f
+
+  trash.l=AvailMem_(#MEMF_FAST)
+
+  If trash=0 OR cpu<2
+    End
+  End If
+
+  gfxnam$="graphics.library"
+  gfxbase.l=OpenLibrary_(gfxnam$,39)
+  mdosnam$="dos.library"
+  mdosbase.l=OpenLibrary_(mdosnam$,39)
+  intuinam$="intuition.library"
+  intuibase.l=OpenLibrary_(intuinam$,39)
+  fblname$="fblit.library"
+  fblbase.l=OpenLibrary_("PROGDIR:"+fblname$,1)
+
+  If fblbase=0
+    fblbase.l=OpenLibrary_(fblname$,0)
+  End If
+
+  If gfxbase=0 OR mdosbase=0 OR fblbase=0 OR intuibase=0
+    Gosub cleaner
+    End
+  End If
+
+  mylock.l=GetProgramDir_()
+
+  If mylock
+    myname.l=AllocMem(1024,#MEMF_CLEAR|#MEMF_PUBLIC)
+
+    If myname=0
+      Gosub cleaner
+      End
+    End If
+
+    trash.l=NameFromLock_(mylock,myname,1024)
+    mypath$=Peek$(myname)
+
+    If Right$(mypath$,1)<>":" AND Right$(mypath$,1)<>"/"
+
+      If Instr(mypath$,":")
+        mypath$+"/"
+      Else
+        mypath$+":"
+      End If
+
+    End If
+
+  Else
+    mypath$=""
+  End If
+
+
+
+
+INCLUDE "code:blitz/fblit300/fblitutil.bb2"
+INCLUDE "code:blitz/fblit300/definitions.bb2"
+
+Dim patch.pathigh(#NUM_PATCHES)
+
+INCLUDE "code:blitz/fblit300/list_manager.bb2"
+INCLUDE "code:blitz/fblit300/cfg_def.bb2"
+
+
+
+
+  ;get programme and version
+
+.prog_ver:
+
+  Restore version
+  Read version$
+
+  prog$=param{version$,2,$20,0}
+  ver$=param{version$,3,$20,0}
+  title$=prog$+" "+ver$+Chr$(0)
+
+
+
+
+.autodetach:
+  ;auto-detach mallarky
+
+  Forbid_
+
+    trash.l=FindPort_(prog$)
+
+    If trash=0              ;then fblit isn't running
+      trash.l=FindPort_(prog$+"X")
+
+      If trash=0            ;soo, we are the launcher...
+        *myport.MsgPort=CreateMsgPort_
+
+        If *myport
+          a$=prog$+"X"
+          *myport\mp_Node\ln_Name=&a$
+          *myport\mp_Node\ln_Pri=0
+          AddPort_(*myport)
+
+          Permit_
+          tags(0)=#NP_StackSize     : tags(1)=16384
+          tags(2)=#TAG_DONE
+
+          trash.l=SystemTagList_("run >nil: "+Chr$($22)+mypath$+"FBlit"+Chr$($22),&tags(0))
+
+          Forbid_
+
+          Repeat
+            Permit_
+            VWait
+            Forbid_
+            *port.MsgPort=FindPort_(prog$)
+          Until *port
+
+          mess.fblitmess\fm_msg\mn_ReplyPort=*myport
+          mess\fm_msg\mn_Length=SizeOf.fblitmess
+
+  ;send dummy message
+
+          mess\fm_msg\mn_Node\ln_Type=#NT_MESSAGE
+          mess\fm_command=#FM_DUMMY
+
+          PutMsg_ *port,&mess
+
+          Permit_
+
+          *com.Message=0
+
+          While *com<>&mess
+            WaitPort_(*myport)
+            *com=GetMsg_(*myport)
+
+            If *com\mn_Node\ln_Type<>#NT_REPLYMSG
+              ReplyMsg_ *com
+            End If
+
+          Wend
+
+        Else
+          Permit_
+        End If
+                                                                                                                               d
+        Gosub cleaner       ;outa here...
+        End
+      End If
+
+    End If
+
+  Permit_
+
+
+
+
+  ;how much chip ram?
+
+.chip_rng
+
+  a.l=(*execbase\MaxLocMem)-1
+
+  ffield.l=32
+
+  While a>0
+    a/2
+    ffield-1
+  Wend
+
+
+
+
+  ;task log semaphore
+
+  InitSemaphore_(&tasklog.loglist)
+
+
+
+;newlist
+  tasklog\ll_list\lh_Head=&tasklog\ll_list\lh_Tail
+  tasklog\ll_list\lh_Tail=0
+  tasklog\ll_list\lh_TailPred=&tasklog\ll_list\lh_Head
+
+  #LOG_SIZE=$100            ;********* and in asm! **********
+
+
+  patch(0)\version=Right$(version$,Len(version$)-6)
+
+;
+;the asm stuff...
+;
+    
+
+.define_bem
+  Goto def_bemskip:
+
+asmbem:
+  IncBin  "code:object/BlitEm0043"
+
+def_bemskip:
+  *BlitEm.patlow=?asmbem
+  custom.l=&*BlitEm\code+8
+
+
+.define_bbm
+  Goto def_bbmskip:         ;avoid inline code
+
+asma:
+  IncBin  "code:object/FBltBitMap217"
+
+def_bbmskip:
+  patch(1)\version="FBltBitMap 2.17 (04.02.2001)"
+  patch(1)\exe=?asma
+  patch(1)\base=gfxbase
+  patch(1)\lvo=-30
+
+  patch(1)\exe\ffield=ffield
+
+  debug$=SPACE$(256)
+
+  patch(1)\exe\user1=&debug$
+  patch(1)\exe\fblbase=fblbase
+
+
+.define_bc
+  Goto def_bcskip:         ;avoid inline code
+
+asmbc:
+  IncBin  "code:object/FBltClear21"
+
+def_bcskip:
+  patch(2)\version="FBltClear 2.1 (20.09.2001)"
+  patch(2)\exe=?asmbc
+  patch(2)\base=gfxbase
+  patch(2)\lvo=-300
+
+  patch(2)\exe\ffield=ffield
+  patch(2)\exe\fblbase=fblbase
+
+
+.define_bt
+  Goto def_btskip:         ;avoid inline code
+
+asmbt:
+  IncBin  "code:object/FBltTemplate33"
+
+def_btskip:
+  patch(3)\version="FBltTemplate 3.3 (20.09.2001)"
+  patch(3)\exe=?asmbt
+  patch(3)\base=gfxbase
+  patch(3)\lvo=-36
+
+  patch(3)\exe\user0=custom
+  patch(3)\exe\ffield=ffield
+  patch(3)\exe\fblbase=fblbase
+
+
+.define_bp
+  Goto def_bpskip:         ;avoid inline code
+
+asmbp:
+  IncBin  "code:object/FBltPattern313"
+
+def_bpskip:
+  patch(4)\version="FBltPattern 3.13 (20.09.2001)"
+  patch(4)\exe=?asmbp
+  patch(4)\base=gfxbase
+  patch(4)\lvo=-312
+
+  patch(4)\exe\user0=custom
+  patch(4)\exe\ffield=ffield
+
+  patch(4)\exe\fblbase=fblbase
+
+
+.define_bms
+  Goto def_bmsskip:         ;avoid inline code
+
+asmbms:
+  IncBin  "code:object/FBitMapScale231"
+
+def_bmsskip:
+  patch(5)\version="FBitMapScale 2.31 (24.02.99)"
+  patch(5)\exe=?asmbms
+  patch(5)\base=gfxbase
+  patch(5)\lvo=-678
+
+  patch(5)\exe\ffield=ffield
+  patch(5)\exe\fblbase=fblbase
+
+   
+.define_flood
+  Goto def_floodskip
+
+asmflood:
+  IncBin  "code:object/FFlood003"
+
+def_floodskip:
+  patch(6)\version="FFlood 0.3 (15.02.2000)"
+  patch(6)\exe=?asmflood
+  patch(6)\base=gfxbase
+  patch(6)\lvo=-330
+
+  patch(6)\exe\ffield=ffield
+  patch(6)\exe\fblbase=fblbase
+
+
+.define_abm
+  Goto def_abmskip:
+
+asmabm:
+  IncBin  "code:object/FAllocBitMap359"
+
+def_abmskip:
+  patch(7)\version="FAllocBitMap 3.59 (10.04.2001)"
+  patch(7)\exe=?asmabm
+  patch(7)\base=gfxbase
+  patch(7)\lvo=-918
+
+  patch(7)\exe\ffield=ffield
+  patch(7)\exe\passcnt=&stringlist(#FABM_INCLIST)
+  patch(7)\exe\user0=&stringlist(#FABM_EXCLIST) ;point to fallocmem live task lists
+  patch(7)\exe\user2=&tasklog     ;task log
+  patch(7)\exe\user3=mdosbase
+  patch(7)\exe\fblbase=fblbase
+
+.define_sr
+  Goto def_srskip:
+
+asmsr:
+  IncBin  "code:object/FSetRast24"
+
+def_srskip:
+  patch(8)\version="FSetRast 2.4 (02.01.99)"
+  patch(8)\exe=?asmsr
+  patch(8)\base=gfxbase
+  patch(8)\lvo=-234
+
+  patch(8)\exe\ffield=ffield
+
+  patch(8)\exe\user1=&debug$
+  patch(8)\exe\fblbase=fblbase
+
+
+.define_adb
+  Goto def_adbskip:
+
+asmadb:
+  IncBin  "code:object/AddBobPatch003"
+
+def_adbskip:
+  patch(9)\version="AddBobPatch 0.3 (11.07.99)"
+  patch(9)\exe=?asmadb
+  patch(9)\base=gfxbase
+  patch(9)\lvo=-96
+
+  patch(9)\exe\ffield=ffield
+  patch(9)\exe\user0=custom
+  patch(9)\exe\fblbase=fblbase
+
+.define_dr
+  Goto def_drskip
+
+asmdr:
+  IncBin  "code:object/FDraw308"
+
+def_drskip:
+  patch(10)\version="FDraw 3.8 (20.09.2001)"
+  patch(10)\exe=?asmdr
+  patch(10)\base=gfxbase
+  patch(10)\lvo=-246
+
+  patch(10)\exe\ffield=ffield
+  patch(10)\exe\fblbase=fblbase
+
+.define_qbs
+  Goto def_qbsskip
+
+asmqbs:
+  IncBin  "code:object/QBSBlitPatch023"
+
+def_qbsskip:
+  patch(11)\version="QBSBlitPatch 0.23 (29.05.2001)"
+  patch(11)\exe=?asmqbs
+  patch(11)\base=gfxbase
+  patch(11)\lvo=-294
+
+  patch(11)\exe\ffield=ffield
+  patch(11)\exe\fblbase=fblbase
+
+.define_osp
+  Goto def_ospskip
+
+asmosp:
+  IncBin  "code:object/OpenScreenTLPatch004"
+
+def_ospskip:
+  patch(12)\version="OSTLPatch 0.4 (27.03.99)"
+  patch(12)\exe=?asmosp
+  patch(12)\base=intuibase
+  patch(12)\lvo=-612
+
+  patch(12)\exe\fblbase=fblbase
+
+.define_rib
+  Goto def_ribskip:
+
+asmrib:
+  IncBin  "code:object/RemIBobPatch002"
+
+def_ribskip:
+  patch(13)\version="RemIBobPatch 0.2 (11.07.99)"
+  patch(13)\exe=?asmrib
+  patch(13)\base=gfxbase
+  patch(13)\lvo=-132
+
+  patch(13)\exe\ffield=ffield
+  patch(13)\exe\user0=custom
+  patch(13)\exe\fblbase=fblbase
+
+.define_ae
+  Goto def_aeskip
+
+asmae:
+  IncBin  "code:object/FAreaEnd125"
+
+def_aeskip:
+  patch(14)\version="FAreaEnd 1.25 (15.02.2000)"
+  patch(14)\exe=?asmae
+  patch(14)\base=gfxbase
+  patch(14)\lvo=-264
+
+  patch(14)\exe\ffield=ffield
+  patch(14)\exe\fblbase=fblbase
+
+
+
+
+                                                                                                                               s
+.main:
+
+  GUI_Active.l=False
+
+  If gfxbase
+
+    Forbid_
+      trash.l=FindPort_(prog$)                      ;FBlit allready running?
+
+
+      If trash=0
+        *myport.MsgPort=CreateMsgPort_
+
+        If *myport
+          *myport\mp_Node\ln_Name=&prog$
+          *myport\mp_Node\ln_Pri=0
+          AddPort_(*myport)
+
+  ;set up config/install patches
+
+          Permit_
+
+          read_cfg{"envarc:FBlit.cfg"}
+          error.l=False
+
+          Forbid_
+
+            For a.l=1 To #NUM_PATCHES           ;install all patches
+              trash.l=installpatch{a,patch(a)\tflags}
+            Next a
+
+          Permit_
+
+;          If Exists("envarc:FBlit.cfg")
+;
+;            If Exists("env:FBlit.cfg")
+;              write_cfg{"env:FBlit.cfg"}
+;            End If
+;
+;          Else
+;            write_cfg{"env:FBlit.cfg"}
+;            write_cfg{"envarc:FBlit.cfg"}
+;
+;;            While FindTask_("Workbench")=0
+;;              VWait 250
+;;            Wend
+;;
+;;            trash.l=SystemTagList_("run FBlitGUI",0)
+;          End If
+
+
+  ;poll loop
+          quit.l=False
+
+          Repeat
+            *com.Message=GetMsg_(*myport)
+
+            While *com=0
+              WaitPort_(*myport)
+              *com=GetMsg_(*myport)
+            Wend
+
+            If *com\mn_Node\ln_Type<>#NT_REPLYMSG
+
+              If *com\mn_Length=SizeOf.fblitmess
+                *mess.fblitmess=*com
+
+                Select  *mess\fm_command
+
+                  Case  #FM_ADDTASK         ;add task
+
+                  Case  #FM_REMTASK         ;remove task
+
+                  Case  #FM_GUIACT
+                    GUI_Active=True
+
+                  Case  #FM_GUIUNACT
+                    GUI_Active=False
+
+                  Case  #FM_QUITNOW
+                    quit=True
+
+                  Case  #FM_ARRAYBASE
+                    *mess\fm_task=&patch(0)
+
+                  Case  #FM_DUMMY           ;dummy
+
+                End Select
+
+              End If
+
+              ReplyMsg_ *com
+            End If
+
+          Until quit=True
+
+          Forbid_
+        End If
+
+      Else
+
+  ;show interface
+
+        Permit_
+
+;        While FindTask_("Workbench")=0
+;          VWait 250
+;        Wend
+
+        tags(0)=#NP_StackSize     : tags(1)=20000
+        tags(2)=#TAG_DONE
+
+        trash.l=SystemTagList_(Chr$($22)+mypath$+"FBlitGUI"+Chr$($22),&tags(0))
+
+        Forbid_
+      End If
+
+    Permit_
+
+  End If
+
+  Goto exit
+
+
+.cleaner:
+
+  ;close port
+
+
+  If *myport
+    RemPort_(*myport)
+
+    Forbid_
+      *com.Message=GetMsg_(*myport)
+
+      While *com>0
+
+        If *com\mn_Node\ln_Type<>#NT_REPLYMSG
+          ReplyMsg_ *com
+        End If
+
+        *com=GetMsg_(*myport)
+      Wend
+
+      DeleteMsgPort_(*myport)
+    Permit_
+
+;    VWait 250   ;give gui plenty time to quit and time
+                ;for people to get out of my code.
+
+  End If
+
+
+  If mygfxbase
+    CloseLibrary_(gfxbase)
+  End If
+
+  If mdosbase
+    CloseLibrary_(mdosbase)
+  End If
+
+  If intuibase
+    CloseLibrary_(intuibase)
+  End If
+
+  If fblbase
+    CloseLibrary_(fblbase)
+  End If
+
+  If mmubase
+    CloseLibrary_(mmubase)
+  End If
+
+  Return
+
+.exit:
+    
+  Gosub cleaner
+
+;  VWait 250
+
+  For a.l=0 To #NUM_LISTS
+    freelist{&stringlist(a),True}
+  Next a
+
+
+  ;free log list
+
+
+;  ObtainSemaphore_(&tasklog\ll_arb)
+  Forbid_
+
+    *curnode.Node=tasklog\ll_list\lh_Head
+
+    While *curnode\ln_Succ
+      *nextnode.Node=*curnode\ln_Succ
+      trash.l=FreeMem_(*curnode,#LOG_SIZE)
+      *curnode=*nextnode
+    Wend
+
+  Permit_
+;  ReleaseSemaphore_(&tasklog\ll_arb)
+
+
+
+  End

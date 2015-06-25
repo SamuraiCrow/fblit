@@ -1,0 +1,748 @@
+
+;MUI bltclear handler
+
+Goto muiabmx                  ;skip this code
+
+
+
+
+
+
+.define_abm
+  Data$ "Config","Lists","Info","*"
+  Data$ "Installed","Removed","*"
+  Data$ "Active","Disabled","*"
+  Data$ "Include","Exclude","*"
+  Data$ "Include List","Exclude List","*"
+  Data$ "Enabled","Disabled","*"
+  Data$ "Promote","Pass On","*"
+  Data$ "Promote","Pass On","*"
+  Data$ "MEM_FAST","MEM_ANY","**"
+
+  Dim abmf$(32)           ;*** MAX 32 STRINGS!! ***
+
+  Restore define_abm:
+
+  a.l=0
+  b.l=1
+  patch(7)\muisarray[0]=&patch(7)\muispnt[0]
+
+  Repeat
+    Read  abmf$(a)
+
+    If Left$(abmf$(a),1)="*"
+      patch(7)\muispnt[a]=0
+      patch(7)\muisarray[b]=&patch(7)\muispnt[a+1]
+      b+1
+    Else
+      patch(7)\muispnt[a]=&abmf$(a)
+    End If
+
+    a+1
+  Until abmf$(a-1)="**"
+
+  Return
+
+
+
+
+
+
+
+
+
+;build mui objects.
+
+.build_abm:
+
+  ;control group
+
+    #ABM_BASEID=$800                 ;abm return id base
+
+    abmf1$="Installed:"
+    *abmf1._Object=!CheckMark{0}
+
+    #ABM_GAD1=#ABM_BASEID+1
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app._Object               ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#ABM_GAD1}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*abmf1,&Macro_Tags(0)}
+
+    abmf2$="Activated:"
+    *abmf2._Object=!CheckMark{0}
+
+    #ABM_GAD2=#ABM_BASEID+2
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#ABM_GAD2}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*abmf2,&Macro_Tags(0)}
+
+    abmfg1$="Patch Installation"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{abmf1$}}
+    !AddTags{!Child                 ,*abmf1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{abmf2$}}
+    !AddTags{!Child                 ,*abmf2}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&abmfg1$}
+    !AddTags{TAG_DONE}
+    *abmfg1._Object=!HGroup
+
+    *abml3._Object=!Label{"Task List Options"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(7)\muisarray[3]}
+    !AddTags{#TAG_DONE}
+    *abmf5._Object=!CycleObject
+
+      #ABM_GAD5=#ABM_BASEID+5
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ABM_GAD5}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmf5,&Macro_Tags(0)}
+
+    *abml8._Object=!Label{"Task Logging"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(7)\muisarray[5]}
+    !AddTags{#TAG_DONE}
+    *abmf8._Object=!CycleObject
+
+      #ABM_GAD8=#ABM_BASEID+8
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ABM_GAD8}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmf8,&Macro_Tags(0)}
+
+    *abml9._Object=!Label{"Anonymous Tasks"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(7)\muisarray[6]}
+    !AddTags{#TAG_DONE}
+    *abmf9._Object=!CycleObject
+
+      #ABM_GAD9=#ABM_BASEID+9
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ABM_GAD9}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmf9,&Macro_Tags(0)}
+
+    *abml10._Object=!Label{"Displayable Bitmaps"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(7)\muisarray[7]}
+    !AddTags{#TAG_DONE}
+    *abmf10._Object=!CycleObject
+
+      #ABM_GAD10=#ABM_BASEID+10
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ABM_GAD10}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmf10,&Macro_Tags(0)}
+
+    *abml11._Object=!Label{"Promotion Memory"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(7)\muisarray[8]}
+    !AddTags{#TAG_DONE}
+    *abmf11._Object=!CycleObject
+
+      #ABM_GAD11=#ABM_BASEID+11
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ABM_GAD11}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmf11,&Macro_Tags(0)}
+
+    abmfg2$="Patch Operation"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&abmfg2$}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*abml8}
+    !AddTags{!Child                 ,*abmf8}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*abml3}
+    !AddTags{!Child                 ,*abmf5}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*abml9}
+    !AddTags{!Child                 ,*abmf9}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*abml10}
+    !AddTags{!Child                 ,*abmf10}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*abml11}
+    !AddTags{!Child                 ,*abmf11}
+    !AddTags{!Child                 ,!VSpace{0}}
+
+    !AddTags{#TAG_DONE}
+    *abmfg2._Object=!ColGroup{4}
+
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*abmfg1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*abmfg2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *abmfr1._Object=!VGroup
+
+
+
+
+
+  ;include list
+                
+  ;build listview
+
+    !NewTags{#MUIA_List_SourceArray ,stringlist(#FABM_INCLIST)\ll_pntr\sl_list}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_InputList}
+    !AddTags{#MUIA_List_AutoVisible ,#MUI_TRUE}
+    !AddTags{#TAG_DONE}
+    *abmillst._Object=!ListObject
+
+    !NewTags{#MUIA_Listview_List    ,*abmillst}
+    !AddTags{#MUIA_CycleChain       ,#MUI_TRUE}
+    !AddTags{#TAG_DONE}
+    *abmilstview._Object=!ListviewObject
+
+
+
+    abmib20$="Remove"
+    *abmib20._Object=!SimpleButton{abmib20$}
+      #ABM_GAD20=#ABM_BASEID+20
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ABM_GAD20}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmib20,&Macro_Tags(0)}
+
+    abmil20$="Add:"
+
+    pops1$=""
+    pops2$=""
+
+    For a.l=0 To 257
+      pops1$+Chr$(0)
+      pops2$+Chr$(0)
+    Next a
+
+    !NewTags{#MUIA_Poplist_Array    ,stringlist(#TASK_LIST)\ll_pntr\sl_list}
+    !AddTags{#MUIA_Popstring_String ,!String{pops1$,256}}
+    !AddTags{#MUIA_Popstring_Button ,!PopButton{#MUII_PopUp}}
+    !AddTags{#MUIA_HorizWeight      ,5000}
+    !AddTags{#TAG_DONE}
+    *abmpop1._Object=!PoplistObject
+
+      #ABM_STR1=#ABM_BASEID+50
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_String_Acknowledge   ,#MUIV_EveryTime}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ABM_STR1}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmpop1,&Macro_Tags(0)}
+
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!Label2{abmil20$}}
+    !AddTags{!Child                 ,*abmpop1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*abmib20}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#TAG_DONE}
+    *abmicon._Object=!HGroup
+
+    !NewTags{!Child                 ,*abmilstview}
+    !AddTags{!Child                 ,*abmicon}
+    !AddTags{#TAG_DONE}
+    *abmil._Object=!VGroup
+
+  ;exclude list
+
+    !NewTags{#MUIA_List_SourceArray ,stringlist(#FABM_EXCLIST)\ll_pntr\sl_list}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_InputList}
+    !AddTags{#MUIA_List_AutoVisible ,#MUI_TRUE}
+    !AddTags{#TAG_DONE}
+    *abmellst._Object=!ListObject
+
+    !NewTags{#MUIA_Listview_List    ,*abmellst}
+    !AddTags{#MUIA_CycleChain       ,#MUI_TRUE}
+    !AddTags{#TAG_DONE}
+    *abmelstview._Object=!ListviewObject
+
+    trash.l=MUIset{*abmelstview,#MUIA_List_Active,0}
+
+
+    abmib21$="Remove"
+    *abmib21._Object=!SimpleButton{abmib21$}
+      #ABM_GAD21=#ABM_BASEID+21
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ABM_GAD21}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmib21,&Macro_Tags(0)}
+
+    abmil21$="Add:"
+
+    !NewTags{#MUIA_Poplist_Array    ,stringlist(#TASK_LIST)\ll_pntr\sl_list}
+    !AddTags{#MUIA_Popstring_String ,!String{pops2$,256}}
+    !AddTags{#MUIA_Popstring_Button ,!PopButton{#MUII_PopUp}}
+    !AddTags{#MUIA_HorizWeight      ,5000}
+    !AddTags{#TAG_DONE}
+    *abmpop2._Object=!PoplistObject
+
+      #ABM_STR2=#ABM_BASEID+51
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_String_Acknowledge   ,#MUIV_EveryTime}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ABM_STR2}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmpop2,&Macro_Tags(0)}
+
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!Label2{abmil21$}}
+    !AddTags{!Child                 ,*abmpop2}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*abmib21}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#TAG_DONE}
+    *abmecon._Object=!HGroup
+
+    !NewTags{!Child                 ,*abmelstview}
+    !AddTags{!Child                 ,*abmecon}
+    !AddTags{#TAG_DONE}
+    *abmel._Object=!VGroup
+
+
+
+
+  ;list reg group
+
+    !NewTags{!Child                 ,*abmil}
+    !AddTags{!Child                 ,*abmel}
+    !AddTags{#TAG_DONE}
+    *abmfr3._Object=!RegisterGroup{patch(7)\muisarray[4]}
+
+
+
+
+
+
+  ;info group
+
+    *abmfil1._Object=!Label{patch(7)\version}
+    abmfig1$="Version"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*abmfil1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&abmfig1$}
+    !AddTags{#TAG_DONE}
+    *abmfig1._Object=!HGroup
+
+    abmfig2$="Stats"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Text}
+    !AddTags{#MUIA_Font             ,#MUIV_Font_Fixed}
+    !AddTags{#TAG_DONE}
+    *abmil1._Object=!Label{"Original Addr:"}
+    *abmit1._Object=!TextObject
+    *abmil2._Object=!Label{"Standard:"}
+    *abmit2._Object=!TextObject
+    *abmil3._Object=!Label{"Current Addr:"}
+    *abmit3._Object=!TextObject
+    *abmil4._Object=!Label{"Modified:"}
+    *abmit4._Object=!TextObject
+    *abmil5._Object=!Label{"Patch Code:"}
+    *abmit5._Object=!TextObject
+    *abmil6._Object=!HSpace{0}
+    *abmit6._Object=!HSpace{0}
+    *abmil7._Object=!HSpace{0}
+    *abmit7._Object=!HSpace{0}
+    *abmil8._Object=!HSpace{0}
+    *abmit8._Object=!HSpace{0}
+    abmib1$="Update"
+    *abmib1._Object=!SimpleButton{abmib1$}
+      #ABM_GAD6=#ABM_BASEID+6
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ABM_GAD6}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmib1,&Macro_Tags(0)}
+    abmib2$="Reset"
+    *abmib2._Object=!SimpleButton{abmib2$}
+      #ABM_GAD7=#ABM_BASEID+7
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#ABM_GAD7}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmib2,&Macro_Tags(0)}
+    !NewTags{!Child                 ,*abmil1}
+    !AddTags{!Child                 ,*abmit1}
+    !AddTags{!Child                 ,*abmil2}
+    !AddTags{!Child                 ,*abmit2}
+    !AddTags{!Child                 ,*abmil3}
+    !AddTags{!Child                 ,*abmit3}
+    !AddTags{!Child                 ,*abmil4}
+    !AddTags{!Child                 ,*abmit4}
+    !AddTags{!Child                 ,*abmil5}
+    !AddTags{!Child                 ,*abmit5}
+    !AddTags{!Child                 ,*abmil6}
+    !AddTags{!Child                 ,*abmit6}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*abmil7}
+    !AddTags{!Child                 ,*abmit7}
+    !AddTags{!Child                 ,*abmib1}
+    !AddTags{!Child                 ,*abmib2}
+    !AddTags{!Child                 ,*abmil8}
+    !AddTags{!Child                 ,*abmit8}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&abmfig2$}
+    !AddTags{#TAG_DONE}
+    *abmfig2._Object=!ColGroup{4}
+
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*abmfig1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*abmfig2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *abmfr2._Object=!VGroup
+
+  ;reg group
+
+    !NewTags{!Child                 ,*abmfr1}
+    !AddTags{!Child                 ,*abmfr3}
+    !AddTags{!Child                 ,*abmfr2}
+    !AddTags{#TAG_DONE}
+    patch(7)\reg=!RegisterGroup{patch(7)\muisarray[0]}
+
+    If patch(7)\reg=0
+      doerror{"MUI creation failure in AllocBitMap."}
+      Goto exit
+    Else
+
+  ;help
+      trash=MUIset{*abmf1,#MUIA_ShortHelp,&h5$}
+      trash=MUIset{*abmf2,#MUIA_ShortHelp,&h22$}
+      trash=MUIset{*abmib1,#MUIA_ShortHelp,&h8$}
+      trash=MUIset{*abmib2,#MUIA_ShortHelp,&h7$}
+      trash=MUIset{*abmf5,#MUIA_ShortHelp,&h18$}
+      trash=MUIset{*abmib20,#MUIA_ShortHelp,&h19$}
+      trash=MUIset{*abmib21,#MUIA_ShortHelp,&h19$}
+      trash=MUIset{*abmpop1,#MUIA_ShortHelp,&h20$}
+      trash=MUIset{*abmpop2,#MUIA_ShortHelp,&h20$}
+      trash=MUIset{*abmf8,#MUIA_ShortHelp,&h21$}
+      trash=MUIset{*abmf9,#MUIA_ShortHelp,&h22a$}
+      trash=MUIset{*abmf10,#MUIA_ShortHelp,&h22b$}
+      trash=MUIset{*abmf11,#MUIA_ShortHelp,&h22c$}
+    End If
+
+    Gosub abm_intfc
+    Gosub abm_stats
+
+  Return
+
+
+
+
+
+
+;poll abm
+
+.abm_poll
+
+  a.l=0
+
+  Select sel.l
+
+    Case  #ABM_GAD1                 ;install gadget
+      trash.l=GetAttr_(#MUIA_Selected,*abmf1,&a)
+      flags.l=patch(7)\exe\flags
+      flags=unset{flags,#PF_INSTALLED,(a=#MUI_TRUE)}
+      error.l=installpatch{7,flags}
+
+      If error
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+        trash.l=MUIset{*abmf1,#MUIA_Selected,#MUI_TRUE}
+        a$="FAllocBitMap has been overpatched|"
+        a$+"and therefore cannot be removed!"
+        doerror{a$}
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+      Else
+        Gosub abm_stats
+      End If
+
+    Case  #ABM_GAD2                 ;active gadget
+      trash.l=GetAttr_(#MUIA_Selected,*abmf2,&a)
+      patch(7)\exe\flags=unset{patch(7)\exe\flags,#PF_ACTIVATED,(a=#MUI_TRUE)}
+
+    Case  #ABM_GAD5                 ;list mode
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*abmf5,&a)
+
+      flags=patch(7)\exe\flags
+      flags=unset{flags,#ABMF_INCLUDE,(a=0)}
+      flags=unset{flags,#ABMF_EXCLUDE,(a=1)}
+      patch(7)\exe\flags=flags
+
+    Case  #ABM_GAD6                 ;update stats
+      Gosub abm_stats
+
+    Case  #ABM_GAD7                 ;reset stats
+
+      Forbid_
+        patch(7)\exe\fastcnt=0
+        patch(7)\exe\proccnt=0
+      Permit_
+
+      Gosub abm_stats
+
+    Case  #ABM_GAD8                 ;task logging
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*abmf8,&a)
+
+      flags=patch(7)\exe\flags
+      flags=unset{flags,#ABMF_LOGGING,(a=0)}
+      patch(7)\exe\flags=flags
+
+    Case  #ABM_GAD9
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*abmf9,&a)
+
+      flags=patch(7)\exe\flags
+      flags=unset{flags,#ABMF_ANON,(a=0)}
+      patch(7)\exe\flags=flags
+
+    Case  #ABM_GAD10                ;displayable bitmaps
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*abmf10,&a)
+
+      flags=patch(7)\exe\flags
+      flags=unset{flags,#ABMF_DISPLAYABLE,(a=0)}
+      patch(7)\exe\flags=flags
+
+    Case  #ABM_GAD11                ;memory type
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*abmf11,&a)
+
+      flags=patch(7)\exe\flags
+      flags=unset{flags,#ABMF_MEMFANY,(a=1)}
+      patch(7)\exe\flags=flags
+
+
+    Case  #ABM_GAD20                ;delete task (include)
+      member.l=0
+      GetAttr_ #MUIA_List_Active,*abmillst,&member
+
+      If member<>#MUIV_List_Active_Off
+
+        trash.l=MUIset{*mainwin,#MUIA_Window_Sleep,#MUI_TRUE}
+
+        !NewTags{#MUIM_List_Clear}
+        !AddTags{#TAG_DONE}
+        trash.l=DoMethodA{*abmillst,&Macro_Tags(0)}
+
+        delmember{member+1,&stringlist(#FABM_INCLIST),True}
+
+        !NewTags{#MUIM_List_Insert}
+        !AddTags{stringlist(#FABM_INCLIST)\ll_pntr\sl_list  ,-1}
+        !AddTags{#MUIV_List_Insert_Bottom}
+        !AddTags{#TAG_DONE}
+        trash.l=DoMethodA{*abmillst,&Macro_Tags(0)}
+
+        trash.l=MUIset{*mainwin,#MUIA_Window_Sleep,#MUI_FALSE}
+
+        If member>stringlist(#FABM_INCLIST)\ll_entries
+          member=#MUIV_List_Active_Bottom
+        End If
+
+        trash.l=MUIset{*abmillst,#MUIA_List_Active,member}
+
+      End If
+
+    Case  #ABM_STR1                 ;add task (include)
+      trash.l=0
+      GetAttr_ #MUIA_String_Contents,*abmpop1,&trash
+      a$=Peek$(trash)
+
+      trash.l=MUIset{*mainwin,#MUIA_Window_Sleep,#MUI_TRUE}
+
+      !NewTags{#MUIM_List_Clear}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmillst,&Macro_Tags(0)}
+
+      member.l=addmember{a$,&stringlist(#FABM_INCLIST),True}
+
+      !NewTags{#MUIM_List_Insert}
+      !AddTags{stringlist(#FABM_INCLIST)\ll_pntr\sl_list  ,-1}
+      !AddTags{#MUIV_List_Insert_Bottom}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmillst,&Macro_Tags(0)}
+
+      trash.l=MUIset{*mainwin,#MUIA_Window_Sleep,#MUI_FALSE}
+
+      trash.l=MUIset{*abmillst,#MUIA_List_Active,#MUIV_List_Active_Bottom}
+
+    Case  #ABM_GAD21                ;delete task (exclude)
+      member.l=0
+      GetAttr_ #MUIA_List_Active,*abmellst,&member
+
+      If member<>#MUIV_List_Active_Off
+
+        trash.l=MUIset{*mainwin,#MUIA_Window_Sleep,#MUI_TRUE}
+
+        !NewTags{#MUIM_List_Clear}
+        !AddTags{#TAG_DONE}
+        trash.l=DoMethodA{*abmellst,&Macro_Tags(0)}
+
+        delmember{member+1,&stringlist(#FABM_EXCLIST),True}
+
+        !NewTags{#MUIM_List_Insert}
+        !AddTags{stringlist(#FABM_EXCLIST)\ll_pntr\sl_list  ,-1}
+        !AddTags{#MUIV_List_Insert_Bottom}
+        !AddTags{#TAG_DONE}
+        trash.l=DoMethodA{*abmellst,&Macro_Tags(0)}
+
+        trash.l=MUIset{*mainwin,#MUIA_Window_Sleep,#MUI_FALSE}
+
+        If member>stringlist(#FABM_EXCLIST)\ll_entries
+          member=#MUIV_List_Active_Bottom
+        End If
+
+        trash.l=MUIset{*abmellst,#MUIA_List_Active,member}
+
+      End If
+
+    Case  #ABM_STR2                 ;add task (exclude)
+      trash.l=0
+      GetAttr_ #MUIA_String_Contents,*abmpop2,&trash
+      a$=Peek$(trash)
+
+      trash.l=MUIset{*mainwin,#MUIA_Window_Sleep,#MUI_TRUE}
+
+      !NewTags{#MUIM_List_Clear}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmellst,&Macro_Tags(0)}
+
+      member.l=addmember{a$,&stringlist(#FABM_EXCLIST),True}
+
+      !NewTags{#MUIM_List_Insert}
+      !AddTags{stringlist(#FABM_EXCLIST)\ll_pntr\sl_list  ,-1}
+      !AddTags{#MUIV_List_Insert_Bottom}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*abmellst,&Macro_Tags(0)}
+
+      trash.l=MUIset{*mainwin,#MUIA_Window_Sleep,#MUI_FALSE}
+
+      trash.l=MUIset{*abmellst,#MUIA_List_Active,#MUIV_List_Active_Bottom}
+
+
+  End Select
+
+  Return
+
+
+
+
+
+
+;update the abm interface
+
+.abm_intfc:
+
+  flags.l=patch(7)\exe\flags
+
+  If (flags AND #PF_INSTALLED)
+    trash.l=MUIset{*abmf1,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*abmf1,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #PF_ACTIVATED)
+    trash.l=MUIset{*abmf2,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*abmf2,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #ABMF_INCLUDE)
+    a.l=0
+  End If
+
+  If (flags AND #ABMF_EXCLUDE)
+    a.l=1
+  End If
+
+  trash.l=MUIset{*abmf5,#MUIA_Cycle_Active,a}
+
+  If (flags AND #ABMF_LOGGING)
+    a=0
+  Else
+    a=1
+  End If
+
+  trash.l=MUIset{*abmf8,#MUIA_Cycle_Active,a}
+
+  If (flags AND #ABMF_ANON)
+    a=0
+  Else
+    a=1
+  End If
+
+  trash.l=MUIset{*abmf9,#MUIA_Cycle_Active,a}
+
+  If (flags AND #ABMF_DISPLAYABLE)
+    a=0
+  Else
+    a=1
+  End If
+
+  trash.l=MUIset{*abmf10,#MUIA_Cycle_Active,a}
+
+  If (flags AND #ABMF_MEMFANY)
+    a=1
+  Else
+    a=0
+  End If
+
+  trash.l=MUIset{*abmf11,#MUIA_Cycle_Active,a}
+
+
+  Return
+
+
+
+
+
+;update abm stats
+
+.abm_stats
+
+  Forbid_
+    current.l=Peek.l(patch(7)\base+patch(7)\lvo+2)
+    fast.l=patch(7)\exe\fastcnt
+    proc.l=patch(7)\exe\proccnt
+  Permit_
+
+  If patch(7)\exe\flags AND #PF_INSTALLED
+    trash.l=MUIset{*abmit1,#MUIA_Text_Contents,"$"+Hex$(Peek.l(patch(7)\exe\orig+2))}
+  Else
+    trash.l=MUIset{*abmit1,#MUIA_Text_Contents,"$--------"}
+  End If
+
+  trash.l=MUIset{*abmit2,#MUIA_Text_Contents,"$"+Hex$(fast)}
+  trash.l=MUIset{*abmit3,#MUIA_Text_Contents,"$"+Hex$(current)}
+  trash.l=MUIset{*abmit4,#MUIA_Text_Contents,"$"+Hex$(proc)}
+  trash.l=MUIset{*abmit5,#MUIA_Text_Contents,"$"+Hex$(&patch(7)\exe\code)}
+
+  Return
+
+
+muiabmx:

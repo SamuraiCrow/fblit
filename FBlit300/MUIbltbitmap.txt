@@ -1,0 +1,578 @@
+
+;MUI bltbitmap handler
+
+Goto muibbmx                  ;skip this code
+
+
+
+
+
+
+.define_bbm
+  Data$ "Config","Info","*"
+  Data$ "Installed","Removed","*"
+  Data$ "Active","Disabled","*"
+  Data$ "Pass On","Pass On Complex","Process All","*"
+  Data$ "Always Pretty","Avoid Flicker","Never Pretty","*"
+  Data$ "Pass On","Process","Discard","*"
+  Data$ "Disabled","Enabled","**"
+
+  Dim bbmf$(32)           ;*** MAX 32 STRINGS!! ***
+
+  Restore define_bbm:
+
+  a.l=0
+  b.l=1
+  patch(1)\muisarray[0]=&patch(1)\muispnt[0]
+
+  Repeat
+    Read  bbmf$(a)
+
+    If Left$(bbmf$(a),1)="*"
+      patch(1)\muispnt[a]=0
+      patch(1)\muisarray[b]=&patch(1)\muispnt[a+1]
+      b+1
+    Else
+      patch(1)\muispnt[a]=&bbmf$(a)
+    End If
+
+    a+1
+  Until bbmf$(a-1)="**"
+
+  Return
+
+
+
+
+
+
+
+
+
+;build mui objects.
+
+.build_bbm:
+
+  ;control group
+
+    #BBM_BASEID=$200                ;bbm return id base
+
+    bbmf1$="Installed:"
+    *bbmf1._Object=!CheckMark{0}
+
+    #BBM_GAD1=#BBM_BASEID+1
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app._Object               ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#BBM_GAD1}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*bbmf1,&Macro_Tags(0)}
+
+    bbmf2$="Activated:"
+    *bbmf2._Object=!CheckMark{0}
+
+    #BBM_GAD2=#BBM_BASEID+2
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#BBM_GAD2}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*bbmf2,&Macro_Tags(0)}
+
+    bbmfg1$="Patch Installation"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{bbmf1$}}
+    !AddTags{!Child                 ,*bbmf1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{bbmf2$}}
+    !AddTags{!Child                 ,*bbmf2}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&bbmfg1$}
+    !AddTags{TAG_DONE}
+    *bbmfg1._Object=!HGroup
+
+    *bbml1._Object=!Label{"Chip Data Options"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(1)\muisarray[3]}
+    !AddTags{#TAG_DONE}
+    *bbmf3._Object=!CycleObject
+
+    #BBM_GAD3=#BBM_BASEID+3
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#BBM_GAD3}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*bbmf3,&Macro_Tags(0)}
+
+    *bbml2._Object=!Label{"Copy Chip Processing"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(1)\muisarray[4]}
+    !AddTags{#TAG_DONE}
+    *bbmf4._Object=!CycleObject
+ 
+    #BBM_GAD4=#BBM_BASEID+4
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#BBM_GAD4}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*bbmf4,&Macro_Tags(0)}
+
+    *bbml3._Object=!Label{"Fast Data Options"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(1)\muisarray[5]}
+    !AddTags{#TAG_DONE}
+    *bbmf5._Object=!CycleObject
+ 
+    #BBM_GAD5=#BBM_BASEID+5
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#BBM_GAD5}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*bbmf5,&Macro_Tags(0)}
+
+    *bbml31._Object=!Label{"Stack Checking"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(1)\muisarray[6]}
+    !AddTags{#TAG_DONE}
+    *bbmf51._Object=!CycleObject
+
+    #BBM_GAD51=#BBM_BASEID+51
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#BBM_GAD51}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*bbmf51,&Macro_Tags(0)}
+                                                                                                                            
+
+
+
+
+    bbmfg2$="Patch Operation"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&bbmfg2$}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bbml1}
+    !AddTags{!Child                 ,*bbmf3}
+    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{!Child                 ,*bbml2}
+;    !AddTags{!Child                 ,*bbmf4}
+;    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bbml3}
+    !AddTags{!Child                 ,*bbmf5}
+    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{!Child                 ,!VSpace{0}}
+;    !AddTags{!Child                 ,*bbml31}
+;    !AddTags{!Child                 ,*bbmf51}
+;    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *bbmfg2._Object=!ColGroup{4}
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bbmfg1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bbmfg2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *bbmfr1._Object=!VGroup
+
+  ;info group
+
+    *bbmfil1._Object=!Label{patch(1)\version}
+    bbmfig1$="Version"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*bbmfil1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&bbmfig1$}
+    !AddTags{#TAG_DONE}
+    *bbmfig1._Object=!HGroup
+
+    bbmfig2$="Stats"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Text}
+    !AddTags{#MUIA_Font             ,#MUIV_Font_Fixed}
+    !AddTags{#TAG_DONE}
+    *bbmil1._Object=!Label{"Original Addr:"}
+    *bbmit1._Object=!TextObject
+    *bbmil2._Object=!Label{"Chip Ops:"}
+    *bbmit2._Object=!TextObject
+    *bbmil3._Object=!Label{"Current Addr:"}
+    *bbmit3._Object=!TextObject
+    *bbmil4._Object=!Label{"Fast Ops:"}
+    *bbmit4._Object=!TextObject
+    *bbmil5._Object=!Label{"Patch Code:"}
+    *bbmit5._Object=!TextObject
+    *bbmil6._Object=!Label{"Passed On:"}
+    *bbmit6._Object=!TextObject
+    *bbmil7._Object=!Label{"Processed:"}
+    *bbmit7._Object=!TextObject
+    *bbmil8._Object=!Label{"Broken:"}
+    *bbmit8._Object=!TextObject
+    bbmib1$="Update"
+    *bbmib1._Object=!SimpleButton{bbmib1$}
+      #BBM_GAD6=#BBM_BASEID+6
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#BBM_GAD6}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*bbmib1,&Macro_Tags(0)}
+    bbmib2$="Reset"
+    *bbmib2._Object=!SimpleButton{bbmib2$}
+      #BBM_GAD7=#BBM_BASEID+7
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#BBM_GAD7}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*bbmib2,&Macro_Tags(0)}
+    bbmib3$="Debug"
+    *bbmib3._Object=!SimpleButton{bbmib3$}
+      #BBM_GAD8=#BBM_BASEID+8
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#BBM_GAD8}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*bbmib3,&Macro_Tags(0)}
+
+    !NewTags{!Child                 ,*bbmil1}
+    !AddTags{!Child                 ,*bbmit1}
+    !AddTags{!Child                 ,*bbmil2}
+    !AddTags{!Child                 ,*bbmit2}
+    !AddTags{!Child                 ,*bbmil3}
+    !AddTags{!Child                 ,*bbmit3}
+    !AddTags{!Child                 ,*bbmil4}
+    !AddTags{!Child                 ,*bbmit4}
+    !AddTags{!Child                 ,*bbmil5}
+    !AddTags{!Child                 ,*bbmit5}
+    !AddTags{!Child                 ,*bbmil6}
+    !AddTags{!Child                 ,*bbmit6}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*bbmib3}
+    !AddTags{!Child                 ,*bbmil7}
+    !AddTags{!Child                 ,*bbmit7}
+    !AddTags{!Child                 ,*bbmib1}
+    !AddTags{!Child                 ,*bbmib2}
+    !AddTags{!Child                 ,*bbmil8}
+    !AddTags{!Child                 ,*bbmit8}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&bbmfig2$}
+    !AddTags{#TAG_DONE}
+    *bbmfig2._Object=!ColGroup{4}
+
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bbmfig1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bbmfig2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *bbmfr2._Object=!VGroup
+
+  ;reg group
+
+    !NewTags{!Child                 ,*bbmfr1}
+    !AddTags{!Child                 ,*bbmfr2}
+    !AddTags{#TAG_DONE}
+    patch(1)\reg=!RegisterGroup{patch(1)\muisarray[0]}
+
+    If patch(1)\reg=0
+      doerror{"MUI creation failure in FBltBitMap."}
+      Goto exit
+    Else
+
+  ;build debug window...
+
+    #BBM_GAD9=#BBM_BASEID+9
+    Gosub MUIbbdebug
+
+  ;help
+      trash=MUIset{*bbmf1,#MUIA_ShortHelp,&h5$}
+      trash=MUIset{*bbmf2,#MUIA_ShortHelp,&h6$}
+      trash=MUIset{*bbmib1,#MUIA_ShortHelp,&h8$}
+      trash=MUIset{*bbmib2,#MUIA_ShortHelp,&h7$}
+      trash=MUIset{*bbmib3,#MUIA_ShortHelp,&h7a$}
+      trash=MUIset{*bbmf3,#MUIA_ShortHelp,&h9$}
+      trash=MUIset{*bbmf4,#MUIA_ShortHelp,&h10$}
+      trash=MUIset{*bbmf5,#MUIA_ShortHelp,&h11$}
+      trash=MUIset{*bbmf51,#MUIA_ShortHelp,&h11a$}
+    End If
+
+    Gosub bbm_intfc
+    Gosub bbm_stats
+
+  Return
+
+
+
+
+
+
+;poll bbm
+
+.bbm_poll
+
+  a.l=0
+
+  Select sel.l
+
+    Case  #BBM_GAD1                 ;install gadget
+      trash.l=GetAttr_(#MUIA_Selected,*bbmf1,&a)
+      flags.l=patch(1)\exe\flags
+      flags=unset{flags,#PF_INSTALLED,(a=#MUI_TRUE)}
+      error.l=installpatch{1,flags}
+
+      If error
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+        trash.l=MUIset{*bbmf1,#MUIA_Selected,#MUI_TRUE}
+        a$="FBltBitMap has been overpatched|"
+        a$+"and therefore cannot be removed!"
+        doerror{a$}
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+      Else
+        Gosub bbm_stats
+      End If
+
+    Case  #BBM_GAD2                 ;active gadget
+      trash.l=GetAttr_(#MUIA_Selected,*bbmf2,&a)
+      patch(1)\exe\flags=unset{patch(1)\exe\flags,#PF_ACTIVATED,(a=#MUI_TRUE)}
+
+    Case  #BBM_GAD3                 ;chip data options
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*bbmf3,&a)
+
+      flags=patch(1)\exe\flags
+      flags=unset{flags,#BBMF_CPASSON,(a=0)}
+      flags=unset{flags,#BBMF_CPASSCMX,(a=1)}
+      flags=unset{flags,#BBMF_CPROCESS,(a=2)}
+      patch(1)\exe\flags=flags
+
+    Case  #BBM_GAD4                 ;chip process
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*bbmf4,&a)
+
+      flags=patch(1)\exe\flags
+      flags=unset{flags,#BBMF_CMPRETTY,(a=0)}
+      flags=unset{flags,#BBMF_CMNOFLICK,(a=1)}
+      flags=unset{flags,#BBMF_CMNOPRETTY,(a=2)}
+      patch(1)\exe\flags=flags
+
+    Case  #BBM_GAD5                 ;fast option
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*bbmf5,&a)
+
+      flags=patch(1)\exe\flags
+      flags=unset{flags,#BBMF_FPASSON,(a=0)}
+      flags=unset{flags,#BBMF_FPROCESS,(a=1)}
+      flags=unset{flags,#BBMF_FDISCARD,(a=2)}
+      patch(1)\exe\flags=flags
+
+    Case  #BBM_GAD51
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*bbmf51,&a)
+
+      flags=patch(1)\exe\flags
+      flags=unset{flags,#BBMF_STACKCHECK,(a=1)}
+      patch(1)\exe\flags=flags
+
+    Case  #BBM_GAD6                 ;update stats
+      Gosub bbm_stats
+
+    Case  #BBM_GAD7                 ;reset stats
+
+      Forbid_
+        patch(1)\exe\fastcnt=0
+        patch(1)\exe\proccnt=0
+        patch(1)\exe\passcnt=0
+        patch(1)\exe\user0=0
+      Permit_
+
+      Gosub bbm_stats
+
+    Case  #BBM_GAD8                 ;debug button
+
+      trash.l=MUIset{*mainwin._Object,#MUIA_Window_Sleep,#MUI_TRUE}
+
+      ;update stats
+
+      Forbid_
+        a.l=patch(1)\exe\user1
+
+        trash.l=MUIset{*bbdebst1._Object,#MUIA_Text_Contents,"$"+Right$(Hex$(Peek.w(a)),4)}
+        a+2
+        trash.l=MUIset{*bbdebst2._Object,#MUIA_Text_Contents,"$"+Right$(Hex$(Peek.w(a)),4)}
+        a+2
+
+        trash.l=MUIset{*bbdebdt1._Object,#MUIA_Text_Contents,"$"+Right$(Hex$(Peek.w(a)),4)}
+        a+2
+        trash.l=MUIset{*bbdebdt2._Object,#MUIA_Text_Contents,"$"+Right$(Hex$(Peek.w(a)),4)}
+        a+2
+
+        trash.l=MUIset{*bbdebst3._Object,#MUIA_Text_Contents,"$00"+Right$(Hex$(Peek.b(a)),2)}
+        a+1
+        trash.l=MUIset{*bbdebst4._Object,#MUIA_Text_Contents,"$00"+Right$(Hex$(Peek.b(a)),2)}
+        a+1
+        trash.l=MUIset{*bbdebst5._Object,#MUIA_Text_Contents,"$"+Right$(Hex$(Peek.w(a)),4)}
+        a+2
+
+        trash.l=MUIset{*bbdebdt3._Object,#MUIA_Text_Contents,"$00"+Right$(Hex$(Peek.b(a)),2)}
+        a+1
+        trash.l=MUIset{*bbdebdt4._Object,#MUIA_Text_Contents,"$00"+Right$(Hex$(Peek.b(a)),2)}
+        a+1
+        trash.l=MUIset{*bbdebdt5._Object,#MUIA_Text_Contents,"$"+Right$(Hex$(Peek.w(a)),4)}
+        a+2
+
+        trash.l=MUIset{*bbdebst6._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebdt6._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebst7._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebdt7._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebst8._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebdt8._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebst9._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebdt9._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebst10._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebdt10._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebst11._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebdt11._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebst12._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebdt12._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebst13._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+        a+4
+        trash.l=MUIset{*bbdebdt13._Object,#MUIA_Text_Contents,"$"+Hex$(Peek.l(a))}
+      Permit_
+
+      trash.l=MUIset{*debugwin._Object,#MUIA_Window_Open,#MUI_TRUE}
+
+    Case  #BBM_GAD9                 ;cancel debug
+
+      trash.l=MUIset{*debugwin._Object,#MUIA_Window_Open,#MUI_FALSE}
+      trash.l=MUIset{*mainwin._Object,#MUIA_Window_Sleep,#MUI_FALSE}
+
+
+  End Select
+
+  Return
+
+
+
+
+
+
+;update the bbm interface
+
+.bbm_intfc:
+
+  flags.l=patch(1)\exe\flags
+
+  If (flags AND #PF_INSTALLED)
+    trash.l=MUIset{*bbmf1,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*bbmf1,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #PF_ACTIVATED)
+    trash.l=MUIset{*bbmf2,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*bbmf2,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #BBMF_CPASSON)
+    a.l=0
+  End If
+
+  If (flags AND #BBMF_CPASSCMX)
+    a.l=1
+  End If
+
+  If (flags AND #BBMF_CPROCESS)
+    a.l=2
+  End If
+
+  trash.l=MUIset{*bbmf3,#MUIA_Cycle_Active,a}
+
+  If (flags AND #BBMF_CMPRETTY)
+    a.l=0
+  End If
+
+  If (flags AND #BBMF_CMNOFLICK)
+    a.l=1
+  End If
+
+  If (flags AND #BBMF_CMNOPRETTY)
+    a.l=2
+  End If
+
+  trash.l=MUIset{*bbmf4,#MUIA_Cycle_Active,a}
+
+  If (flags AND #BBMF_FPASSON)
+    a.l=0
+  End If
+
+  If (flags AND #BBMF_FPROCESS)
+    a.l=1
+  End If
+
+  If (flags AND #BBMF_FDISCARD)
+    a.l=2
+  End If
+
+  trash.l=MUIset{*bbmf5,#MUIA_Cycle_Active,a}
+
+  If (flags AND #BBMF_STACKCHECK)
+    a.l=1
+  Else
+    a.l=0
+  End If
+
+  trash.l=MUIset{*bbmf51,#MUIA_Cycle_Active,a}
+
+  Return
+
+
+
+
+
+;update bbm stats
+
+.bbm_stats
+
+  Forbid_
+    current.l=Peek.l(patch(1)\base+patch(1)\lvo+2)
+    fast.l=patch(1)\exe\fastcnt
+    pass.l=patch(1)\exe\passcnt
+    proc.l=patch(1)\exe\proccnt
+    brk.l=patch(1)\exe\user0
+  Permit_
+
+  If patch(1)\exe\flags AND #PF_INSTALLED
+    trash.l=MUIset{*bbmit1,#MUIA_Text_Contents,"$"+Hex$(Peek.l(patch(1)\exe\orig+2))}
+  Else
+    trash.l=MUIset{*bbmit1,#MUIA_Text_Contents,"$--------"}
+  End If
+
+  total.l=pass+proc
+  trash.l=MUIset{*bbmit2,#MUIA_Text_Contents,"$"+Hex$(total-fast)}
+  trash.l=MUIset{*bbmit3,#MUIA_Text_Contents,"$"+Hex$(current)}
+  trash.l=MUIset{*bbmit4,#MUIA_Text_Contents,"$"+Hex$(fast)}
+  trash.l=MUIset{*bbmit5,#MUIA_Text_Contents,"$"+Hex$(&patch(1)\exe\code)}
+  trash.l=MUIset{*bbmit6,#MUIA_Text_Contents,"$"+Hex$(pass)}
+  trash.l=MUIset{*bbmit7,#MUIA_Text_Contents,"$"+Hex$(proc)}
+  trash.l=MUIset{*bbmit8,#MUIA_Text_Contents,"$"+Hex$(brk)}
+
+  Return
+
+
+muibbmx:

@@ -1,0 +1,404 @@
+
+;MUI bltclear handler
+
+Goto muidrx                  ;skip this code
+
+
+
+
+
+
+.define_dr
+  Data$ "Config","Info","*"
+  Data$ "Installed","Removed","*"
+  Data$ "Active","Disabled","*"
+  Data$ "Pass On","Process","Discard","*"
+  Data$ "Pass On","Process Hor","Process All","**"
+
+  Dim drf$(32)           ;*** MAX 32 STRINGS!! ***
+
+  Restore define_dr:
+
+  a.l=0
+  b.l=1
+  patch(10)\muisarray[0]=&patch(10)\muispnt[0]
+
+  Repeat
+    Read  drf$(a)
+
+    If Left$(drf$(a),1)="*"
+      patch(10)\muispnt[a]=0
+      patch(10)\muisarray[b]=&patch(10)\muispnt[a+1]
+      b+1
+    Else
+      patch(10)\muispnt[a]=&drf$(a)
+    End If
+
+    a+1
+  Until drf$(a-1)="**"
+
+  Return
+
+
+
+
+
+
+
+
+
+;build mui objects.
+
+.build_dr:
+
+  ;control group
+
+    #DR_BASEID=$b00                 ;dr return id base
+
+    drf1$="Installed:"
+    *drf1._Object=!CheckMark{0}
+
+    #DR_GAD1=#DR_BASEID+1
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app._Object               ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#DR_GAD1}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*drf1,&Macro_Tags(0)}
+
+    drf2$="Activated:"
+    *drf2._Object=!CheckMark{0}
+
+    #DR_GAD2=#DR_BASEID+2
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#DR_GAD2}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*drf2,&Macro_Tags(0)}
+
+    drfg1$="Patch Installation"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{drf1$}}
+    !AddTags{!Child                 ,*drf1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{drf2$}}
+    !AddTags{!Child                 ,*drf2}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&drfg1$}
+    !AddTags{TAG_DONE}
+    *drfg1._Object=!HGroup
+    
+    *drl1._Object=!Label{"Chip Data Options"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(10)\muisarray[4]}
+    !AddTags{#TAG_DONE}
+    *drf3._Object=!CycleObject
+
+    #DR_GAD3=#DR_BASEID+3
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#DR_GAD3}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*drf3,&Macro_Tags(0)}
+
+    *drl3._Object=!Label{"Fast Data Options"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(10)\muisarray[3]}
+    !AddTags{#TAG_DONE}
+    *drf5._Object=!CycleObject
+ 
+    #DR_GAD5=#DR_BASEID+5
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#DR_GAD5}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*drf5,&Macro_Tags(0)}
+
+    drfg2$="Patch Operation"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&drfg2$}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*drl1}
+    !AddTags{!Child                 ,*drf3}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*drl3}
+    !AddTags{!Child                 ,*drf5}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *drfg2._Object=!ColGroup{4}
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*drfg1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*drfg2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *drfr1._Object=!VGroup
+
+  ;info group
+
+    *drfil1._Object=!Label{patch(10)\version}
+    drfig1$="Version"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*drfil1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&drfig1$}
+    !AddTags{#TAG_DONE}
+    *drfig1._Object=!HGroup
+
+    drfig2$="Stats"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Text}
+    !AddTags{#MUIA_Font             ,#MUIV_Font_Fixed}
+    !AddTags{#TAG_DONE}
+    *dril1._Object=!Label{"Original Addr:"}
+    *drit1._Object=!TextObject
+    *dril2._Object=!Label{"Chip Ops:"}
+    *drit2._Object=!TextObject
+    *dril3._Object=!Label{"Current Addr:"}
+    *drit3._Object=!TextObject
+    *dril4._Object=!Label{"Fast Ops:"}
+    *drit4._Object=!TextObject
+    *dril5._Object=!Label{"Patch Code:"}
+    *drit5._Object=!TextObject
+    *dril6._Object=!Label{"Passed On:"}
+    *drit6._Object=!TextObject
+    *dril7._Object=!Label{"Processed:"}
+    *drit7._Object=!TextObject
+    *dril8._Object=!Label{"Total:"}
+    *drit8._Object=!TextObject
+    drib1$="Update"
+    *drib1._Object=!SimpleButton{drib1$}
+      #DR_GAD6=#DR_BASEID+6
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#DR_GAD6}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*drib1,&Macro_Tags(0)}
+    drib2$="Reset"
+    *drib2._Object=!SimpleButton{drib2$}
+      #DR_GAD7=#DR_BASEID+7
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#DR_GAD7}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*drib2,&Macro_Tags(0)}
+    !NewTags{!Child                 ,*dril1}
+    !AddTags{!Child                 ,*drit1}
+    !AddTags{!Child                 ,*dril2}
+    !AddTags{!Child                 ,*drit2}
+    !AddTags{!Child                 ,*dril3}
+    !AddTags{!Child                 ,*drit3}
+    !AddTags{!Child                 ,*dril4}
+    !AddTags{!Child                 ,*drit4}
+    !AddTags{!Child                 ,*dril5}
+    !AddTags{!Child                 ,*drit5}
+    !AddTags{!Child                 ,*dril6}
+    !AddTags{!Child                 ,*drit6}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*dril7}
+    !AddTags{!Child                 ,*drit7}
+    !AddTags{!Child                 ,*drib1}
+    !AddTags{!Child                 ,*drib2}
+    !AddTags{!Child                 ,*dril8}
+    !AddTags{!Child                 ,*drit8}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&drfig2$}
+    !AddTags{#TAG_DONE}
+    *drfig2._Object=!ColGroup{4}
+
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*drfig1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*drfig2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *drfr2._Object=!VGroup
+
+  ;reg group
+
+    !NewTags{!Child                 ,*drfr1}
+    !AddTags{!Child                 ,*drfr2}
+    !AddTags{#TAG_DONE}
+    patch(10)\reg=!RegisterGroup{patch(10)\muisarray[0]}
+
+    If patch(10)\reg=0
+      doerror{"MUI creation failure in Draw."}
+      Goto exit
+    Else
+
+  ;help
+      trash=MUIset{*drf1,#MUIA_ShortHelp,&h5$}
+      trash=MUIset{*drf2,#MUIA_ShortHelp,&h6$}
+      trash=MUIset{*drib1,#MUIA_ShortHelp,&h8$}
+      trash=MUIset{*drib2,#MUIA_ShortHelp,&h7$}
+      trash=MUIset{*drf5,#MUIA_ShortHelp,&h25$}
+      trash=MUIset{*drf3,#MUIA_ShortHelp,&h26$}
+    End If
+
+    Gosub dr_intfc
+    Gosub dr_stats
+
+  Return
+
+
+
+
+
+
+;poll dr
+
+.dr_poll
+
+  a.l=0
+
+  Select sel.l
+
+    Case  #DR_GAD1                 ;install gadget
+      trash.l=GetAttr_(#MUIA_Selected,*drf1,&a)
+      flags.l=patch(10)\exe\flags
+      flags=unset{flags,#PF_INSTALLED,(a=#MUI_TRUE)}
+      error.l=installpatch{10,flags}
+
+      If error
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+        trash.l=MUIset{*drf1,#MUIA_Selected,#MUI_TRUE}
+        a$="FDraw has been overpatched|"
+        a$+"and therefore cannot be removed!"
+        doerror{a$}
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+      Else
+        Gosub dr_stats
+      End If
+
+    Case  #DR_GAD2                 ;active gadget
+      trash.l=GetAttr_(#MUIA_Selected,*drf2,&a)
+      patch(10)\exe\flags=unset{patch(10)\exe\flags,#PF_ACTIVATED,(a=#MUI_TRUE)}
+     
+    Case  #DR_GAD3
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*drf3,&a)
+
+      flags=patch(10)\exe\flags
+      flags=unset{flags,#DRF_CPROCESS,(a=2)}
+      flags=unset{flags,#DRF_CLIMP,(a=1)}
+      patch(10)\exe\flags=flags
+
+    Case  #DR_GAD5                 ;fast option
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*drf5,&a)
+
+      flags=patch(10)\exe\flags
+      flags=unset{flags,#DRF_FPASSON,(a=0)}
+      flags=unset{flags,#DRF_FPROCESS,(a=1)}
+      flags=unset{flags,#DRF_FDISCARD,(a=2)}
+      patch(10)\exe\flags=flags
+
+    Case  #DR_GAD6                 ;update stats
+      Gosub dr_stats
+
+    Case  #DR_GAD7                 ;reset stats
+
+      Forbid_
+        patch(10)\exe\fastcnt=0
+        patch(10)\exe\proccnt=0
+        patch(10)\exe\passcnt=0
+      Permit_
+
+      Gosub dr_stats
+
+
+  End Select
+
+  Return
+
+
+
+
+
+
+;update the dr interface
+
+.dr_intfc:
+
+  flags.l=patch(10)\exe\flags
+
+  If (flags AND #PF_INSTALLED)
+    trash.l=MUIset{*drf1,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*drf1,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #PF_ACTIVATED)
+    trash.l=MUIset{*drf2,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*drf2,#MUIA_Selected,#MUI_FALSE}
+  End If
+    
+  a.l=0
+
+  If (flags AND #DRF_CPROCESS)
+    a=2
+  End If
+
+  If (flags AND #DRF_CLIMP)
+    a=1
+  End If
+
+  trash.l=MUIset{*drf3,#MUIA_Cycle_Active,a}
+
+  If (flags AND #DRF_FPASSON)
+    a.l=0
+  End If
+
+  If (flags AND #DRF_FPROCESS)
+    a.l=1
+  End If
+
+  If (flags AND #DRF_FDISCARD)
+    a.l=2
+  End If
+
+  trash.l=MUIset{*drf5,#MUIA_Cycle_Active,a}
+
+  Return
+
+
+
+
+
+;update dr stats
+
+.dr_stats
+
+  Forbid_
+    current.l=Peek.l(patch(10)\base+patch(10)\lvo+2)
+    fast.l=patch(10)\exe\fastcnt
+    pass.l=patch(10)\exe\passcnt
+    proc.l=patch(10)\exe\proccnt
+  Permit_
+
+  If patch(10)\exe\flags AND #PF_INSTALLED
+    trash.l=MUIset{*drit1,#MUIA_Text_Contents,"$"+Hex$(Peek.l(patch(10)\exe\orig+2))}
+  Else
+    trash.l=MUIset{*drit1,#MUIA_Text_Contents,"$--------"}
+  End If
+
+  total.l=pass+proc
+  trash.l=MUIset{*drit2,#MUIA_Text_Contents,"$"+Hex$(total-fast)}
+  trash.l=MUIset{*drit3,#MUIA_Text_Contents,"$"+Hex$(current)}
+  trash.l=MUIset{*drit4,#MUIA_Text_Contents,"$"+Hex$(fast)}
+  trash.l=MUIset{*drit5,#MUIA_Text_Contents,"$"+Hex$(&patch(10)\exe\code)}
+  trash.l=MUIset{*drit6,#MUIA_Text_Contents,"$"+Hex$(pass)}
+  trash.l=MUIset{*drit7,#MUIA_Text_Contents,"$"+Hex$(proc)}
+  trash.l=MUIset{*drit8,#MUIA_Text_Contents,"$"+Hex$(total)}
+
+  Return
+
+
+muidrx:

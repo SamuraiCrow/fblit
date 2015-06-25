@@ -1,0 +1,89 @@
+
+;Exit time...
+
+.exit:
+
+
+;close MUI
+
+  If *app
+    MUIDisposeObject_ *app
+  End If
+
+
+
+  If *my_port
+
+;send unactivate message
+
+    mess\fm_msg\mn_Node\ln_Type=#NT_MESSAGE
+    mess\fm_command=#FM_GUIUNACT
+
+    PutMsg_ *fblit,&mess
+
+    Repeat
+      WaitPort_(*my_port)
+      *com=GetMsg_(*my_port)
+
+      If *com\mn_Node\ln_Type<>#NT_REPLYMSG
+        ReplyMsg_ *com
+      End If
+
+    Until *com=&mess
+
+
+;kill?
+
+    If kill
+      mess\fm_msg\mn_Node\ln_Type=#NT_MESSAGE
+      mess\fm_command=#FM_QUITNOW
+
+      PutMsg_ *fblit,&mess
+
+      Repeat
+        WaitPort_(*my_port)
+        *com=GetMsg_(*my_port)
+
+        If *com\mn_Node\ln_Type<>#NT_REPLYMSG
+          ReplyMsg_ *com
+        End If
+
+      Until *com=&mess
+
+    End If
+
+
+
+;close port
+
+    If *my_port
+
+      Forbid_
+        *com.Message=GetMsg_(*my_port)
+
+        While *com>0
+
+          If *com\mn_Node\ln_Type<>#NT_REPLYMSG
+            ReplyMsg_ *com
+          End If
+
+          *com=GetMsg_(*my_port)
+        Wend
+
+        DeleteMsgPort_(*my_port)
+      Permit_
+
+    End If
+
+  End If
+
+
+;kill lists
+
+    For a.l=0 To #NUM_LISTS
+      freelist{&stringlist(a),True}
+    Next a
+
+
+End
+

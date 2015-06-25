@@ -1,0 +1,253 @@
+
+
+;definitions for fblit.
+
+  
+
+;un/set flag util
+.un_set
+
+  Function.l  unset{flags.l,flag.l,set.l}
+
+    If set
+      flags OR flag
+    Else
+
+      If (flags AND flag)>0
+        flags-flag
+      End If
+
+    End If
+
+    Function Return flags
+
+  End Function
+
+
+
+
+
+;patch stuff. NOTE much of this, and cfg_def is HARDCODED!!!
+;also see 'poll'/intfc_up!!!
+
+
+;low level patch structure
+
+  NEWTYPE.patlow
+
+    hunk.b[32]            ;hunk header
+    code.w                ;exe code addr
+    ffield.w              ;non-chip range definition
+    orig.l                ;original
+    fastcnt.l             ;fast data hits
+    proccnt.l             ;processed hits
+    passcnt.l             ;passed on hits
+    user0.l
+    user1.l
+    user2.l
+    flags.l               ;patch control
+    user3.l
+    fblbase.l             ;fblit.lib base
+
+  End NEWTYPE
+
+  #PF_INSTALLED=1         ;patch installed
+  #PF_ACTIVATED=2         ;patch active
+
+
+
+;high level patch structure
+
+  NEWTYPE.pathigh
+
+    version$              ;version string
+    *exe.patlow           ;patch base address
+    base.l                ;lib base
+    lvo.l                 ;LVO
+    tflags.l              ;temporary flag storage
+    *reg._Object          ;MUI register group
+    muispnt.l[64]         ;MUI string pointers (arrays)
+    muisarray.l[32]       ;MUI string array pointers
+
+  End NEWTYPE
+
+
+
+  #NUM_PATCHES=14         ;number of patches
+
+
+
+;FAllocBitMap list stuff
+
+  #LISTGRANULARITY=1024       ;list mem chunk size
+
+  NEWTYPE.sublist
+
+    sl_list.l                 ;the list
+    sl_size.l                 ;list memsize
+
+  End NEWTYPE
+
+  NEWTYPE.livelist
+
+    ll_sem.SignalSemaphore    ;live list semaphore
+    ll_pntr.sublist           ;string pointers (null terminated)
+    ll_string.sublist         ;strings
+    ll_entries.l              ;#entries
+    ll_name$                  ;list name
+
+  End NEWTYPE
+
+
+  #NUM_LISTS=2
+
+  Dim stringlist.livelist(#NUM_LISTS)
+
+  For a.l=0 To #NUM_LISTS
+    InitSemaphore_(&stringlist(a)\ll_sem)
+  Next a
+
+  #TASK_LIST=0
+
+  #FABM_INCLIST=1         ;fallocbitmap include task list
+  #FABM_EXCLIST=2         ;fallocbitmap exclude task list
+
+  stringlist(#FABM_INCLIST)\ll_name="FABM_Include_Task_List"
+  stringlist(#FABM_EXCLIST)\ll_name="FABM_Exclude_Task_List"
+
+
+  ;task log type
+
+  NEWTYPE.loglist
+
+    ll_arb.SignalSemaphore
+    ll_list.List
+
+  End NEWTYPE
+
+
+
+def_skip:
+
+  Dim tags.l(256)
+
+  ;flags
+
+  #BBMF_CPASSON=4         ;pass on all chip
+  #BBMF_CPASSCMX=8        ;pass on complex
+  #BBMF_CPROCESS=16       ;process all chip
+
+  #BBMF_CMPRETTY=32       ;pretty mode
+  #BBMF_CMNOFLICK=64      ;avoid flicker
+  #BBMF_CMNOPRETTY=128    ;never pretty
+
+  #BBMF_FPASSON=256       ;pass on all fast
+  #BBMF_FPROCESS=512      ;process all fast
+  #BBMF_FDISCARD=1024     ;discard all fast
+  #BBMF_FPASSBROKEN=2048  ;used to be pass on broken
+  #BBMF_STACKCHECK=4096   ;check stack
+
+
+  #BCF_CPASSON=4          ;pass on all chip
+  #BCF_CPASSASY=8         ;pass on asynch
+  #BCF_CPROCESS=16        ;process all chip
+
+  #BCF_FPASSON=32         ;pass on all fast
+  #BCF_FPROCESS=64        ;process all fast
+  #BCF_FDISCARD=128       ;discard all fast
+
+
+  #BTF_FPASSON=4          ;pass on all fast
+  #BTF_FPROCESS=8
+  #BTF_FDISCARD=16        ;discard all fast
+  #BTF_CPROCESS=32        ;process chip
+
+
+  #BPF_FPASSON=4          ;pass on all fast
+  #BPF_FPROCESS=8         ;process all fast
+  #BPF_FDISCARD=16        ;discard all fast
+  #BPF_CPROCESS=32        ;process chip
+  #BPF_CPASSCMX=64        ;pass on complex
+
+
+  #BMSF_CPASSON=4         ;pass on all chip
+  #BMSF_CPROCESS=8        ;process all chip
+
+  #BMSF_FPASSON=16        ;pass on all fast
+  #BMSF_FPROCESS=32       ;process all fast
+  #BMSF_FDISCARD=64       ;discard all fast
+
+  #ABMF_INCLUDE=4         ;include list
+  #ABMF_EXCLUDE=8         ;exclude list
+  #ABMF_LOGGING=16        ;task logging
+  #ABMF_ANON=32           ;promote anonymous tasks
+  #ABMF_DISPLAYABLE=64    ;promote displayable bitmaps
+  #ABMF_MEMFANY=128       ;use #MEMF_ANY
+
+  #SRF_FPASSON=4          ;pass on all fast
+  #SRF_FDISCARD=8         ;discard all fast
+  #SRF_CPROCESS=16        ;process chip
+
+;  #DGLF_CBLITTER=4        ;use blitter in chip
+;  #DGLF_FPROCESS=8        ;process in fast
+
+  #DRF_FPASSON=4          ;pass fast
+  #DRF_FDISCARD=8         ;discard fast
+  #DRF_FPROCESS=16        ;process fast
+  #DRF_CPROCESS=32        ;process chip
+  #DRF_CLIMP=64           ;process chip h&v
+
+  #AEF_FPASSON=4          ;pass fast
+  #AEF_FDISCARD=8         ;discard fast
+
+;  #FLF_FPASSON=4          ;pass fast
+;  #FLF_FDISCARD=8         ;discard fast
+
+  #QBSBF_SYNC=4           ;beam synchronized BOBs
+  #QBSBF_BLITEMU=8        ;render with the blitter emulator
+
+  ;return ID's
+
+  #DOUBLE_START=$100      ;errr, double start?
+
+  #PATCH_LIST=$101        ;the lister of patches
+  #MAIN_SAVE=$102         ;the buttons of the main interface
+  #MAIN_USE=$103
+  #MAIN_CANCEL=$104
+  #MAIN_KILL=$105
+
+  #PATBUT_BASE=$200       ;base ID for patch specific stuff
+
+  ;windows
+
+  #WIN_MAIN=$100          ;main window ID
+  #WIN_DEBUG=$101         ;debug window ID
+
+
+
+
+
+
+  ;messages...
+
+  NEWTYPE.fblitmess
+
+    fm_msg.Message        ;exec message struct
+    fm_command.l          ;command duh.
+    fm_task.l             ;task?
+
+  End NEWTYPE
+
+
+
+  #FM_ADDTASK=$0          ;add a task to falloc task list
+  #FM_REMTASK=$ffffffff   ;remove a task from falloc task list
+
+  #FM_GUIACT=$10          ;GUI active
+  #FM_GUIUNACT=$11        ;GUI un-active
+  #FM_QUITNOW=$12         ;quit fblit now
+  #FM_ARRAYBASE=$13       ;request array base returned in 'fm_task'
+
+  #FM_DUMMY=$14           ;dummy message
+
+

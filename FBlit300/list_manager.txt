@@ -1,0 +1,185 @@
+
+;list management for fallocbitmap
+
+
+
+.alloclist
+
+  Function.l  alloclist{*old.sublist}
+
+    error.l=True
+
+    newsize.l=*old\sl_size+#LISTGRANULARITY
+    oldlist.l=*old\sl_list
+    newlist.l=AllocMem_(newsize,65536)
+
+    If newlist
+
+      If oldlist
+        trash.l=CopyMem_(oldlist,newlist,oldsize)
+        FreeMem_ oldlist,oldsize
+      End If
+
+      *old\sl_list=newlist
+      *old\sl_size=newsize
+      error=False
+    End If
+
+    Function Return error
+
+  End Function
+
+
+
+.addmember:
+
+  Function.l addmember{a$,*lst.livelist,arb.l}
+
+    error.l=False
+
+    If arb
+      Forbid_
+    End If
+
+  ;find next space
+
+    last.l=*lst\ll_entries
+
+    If last>0
+      ladd.l=Peek.l(*lst\ll_pntr\sl_list+((last-1)*4))
+      last$=Peek$(ladd)
+      newstring.l=ladd+Len(last$)+1
+    Else
+      newstring.l=*lst\ll_string\sl_list
+    End If
+
+  ;add new string
+
+    newoff.l=newstring-*lst\ll_string\sl_list
+    newsize.l=newoff+Len(a$)+2
+
+    While (newsize>(*lst\ll_string\sl_size)) AND error=False
+      error=alloclist{&*lst\ll_string}
+    Wend
+
+    If error
+      Goto fambadx
+    End If
+
+    newstring=*lst\ll_string\sl_list+newoff
+    Poke$ newstring,a$
+
+  ;add new pntr
+
+    last+1
+    newsize=last*4+4
+
+    While (newsize>(*lst\ll_pntr\sl_size)) AND error=False
+      error=alloclist{&*lst\ll_pntr}
+    Wend
+
+    If error
+      Goto fambadx
+    End If
+
+    newptr.l=*lst\ll_pntr\sl_list+newsize-8
+    Poke.l newptr,newstring
+    Poke.l newptr+4,0
+
+    *lst\ll_entries=last
+
+    Goto famgoodx
+
+fambadx:
+      newstring=0
+      Goto famx
+
+famgoodx:
+
+famx:
+    If arb
+      Permit_
+    End If
+
+    Function Return newstring
+
+  End Function
+
+
+
+.delmember:
+
+  Statement  delmember{member.l,*lst.livelist,arb}
+
+    If arb
+      Forbid_
+    End If
+
+    member-1
+
+    If member<*lst\ll_entries
+      pntr.l=*lst\ll_pntr\sl_list+member*4
+      string.l=Peek.l(pntr)
+      lenstr.l=Len(Peek$(string))+1
+
+  ;extract string
+
+      begin.l=string+lenstr
+      fin.l=*lst\ll_string\sl_list+*lst\ll_string\sl_size-1
+      trash.l=CopyMem_(begin,string,fin-begin)
+
+  ;extract pntr & update following
+
+      a.l=Peek.l(pntr+4)
+
+      While a
+        Poke.l pntr,a-lenstr
+        pntr+4
+        a.l=Peek.l(pntr+4)
+      Wend
+
+      Poke.l pntr,0
+
+      *lst\ll_entries-1
+    End If
+
+
+dmx:
+    If arb
+      Permit_
+    End If
+
+  End Statement
+
+
+
+.freelist:
+
+  Statement freelist{*lst.livelist,arb}
+
+    If arb
+      Forbid_
+    End If
+
+      If *lst\ll_pntr\sl_list
+        FreeMem_ *lst\ll_pntr\sl_list,*lst\ll_pntr\sl_size
+      End If
+
+      If *lst\ll_string\sl_list
+        FreeMem_ *lst\ll_string\sl_list,*lst\ll_string\sl_size
+      End If
+
+      *lst\ll_entries=0
+      *lst\ll_pntr\sl_list=0
+      *lst\ll_pntr\sl_size=0
+      *lst\ll_string\sl_list=0
+      *lst\ll_string\sl_size=0
+
+    If arb
+      Permit_
+    End If
+
+  End Statement
+
+
+

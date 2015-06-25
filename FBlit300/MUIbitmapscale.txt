@@ -1,0 +1,405 @@
+
+;MUI bitmapscale handler
+
+Goto muibmsx                  ;skip this code
+
+
+
+
+
+
+.define_bms:
+  Data$ "Config","Info","*"
+  Data$ "Installed","Removed","*"
+  Data$ "Active","Disabled","*"
+  Data$ "Pass On","Process","*"
+  Data$ "Pass On","Process","Discard","**"
+
+  Dim bmsf$(32)           ;*** MAX 32 STRINGS!! ***
+
+  Restore define_bms:
+
+  a.l=0
+  b.l=1
+  patch(5)\muisarray[0]=&patch(5)\muispnt[0]
+
+  Repeat
+    Read  bmsf$(a)
+
+    If Left$(bmsf$(a),1)="*"
+      patch(5)\muispnt[a]=0
+      patch(5)\muisarray[b]=&patch(5)\muispnt[a+1]
+      b+1
+    Else
+      patch(5)\muispnt[a]=&bmsf$(a)
+    End If
+
+    a+1
+  Until bmsf$(a-1)="**"
+
+  Return
+
+
+
+
+
+
+
+
+
+;build mui objects.
+
+.build_bms:
+
+  ;control group
+
+    #BMS_BASEID=$600                 ;bms return id base
+
+    bmsf1$="Installed:"
+    *bmsf1._Object=!CheckMark{0}
+
+    #BMS_GAD1=#BMS_BASEID+1
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app._Object               ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#BMS_GAD1}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*bmsf1,&Macro_Tags(0)}
+
+    bmsf2$="Activated:"
+    *bmsf2._Object=!CheckMark{0}
+
+    #BMS_GAD2=#BMS_BASEID+2
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#BMS_GAD2}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*bmsf2,&Macro_Tags(0)}
+
+    bmsfg1$="Patch Installation"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{bmsf1$}}
+    !AddTags{!Child                 ,*bmsf1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{bmsf2$}}
+    !AddTags{!Child                 ,*bmsf2}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&bmsfg1$}
+    !AddTags{TAG_DONE}
+    *bmsfg1._Object=!HGroup
+
+    *bmsl1._Object=!Label{"Chip Data Options"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(5)\muisarray[3]}
+    !AddTags{#TAG_DONE}
+    *bmsf3._Object=!CycleObject
+
+    #BMS_GAD3=#BMS_BASEID+3
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#BMS_GAD3}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*bmsf3,&Macro_Tags(0)}
+
+    *bmsl3._Object=!Label{"Fast Data Options"}
+    !NewTags{#MUIA_Cycle_Entries    ,patch(5)\muisarray[4]}
+    !AddTags{#TAG_DONE}
+    *bmsf5._Object=!CycleObject
+ 
+    #BMS_GAD5=#BMS_BASEID+5
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Cycle_Active         ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#BMS_GAD5}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*bmsf5,&Macro_Tags(0)}
+
+    bmsfg2$="Patch Operation"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&bmsfg2$}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bmsl1}
+    !AddTags{!Child                 ,*bmsf3}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bmsl3}
+    !AddTags{!Child                 ,*bmsf5}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *bmsfg2._Object=!ColGroup{4}
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bmsfg1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bmsfg2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *bmsfr1._Object=!VGroup
+
+  ;info group
+
+    *bmsfil1._Object=!Label{patch(5)\version}
+    bmsfig1$="Version"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*bmsfil1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&bmsfig1$}
+    !AddTags{#TAG_DONE}
+    *bmsfig1._Object=!HGroup
+
+    bmsfig2$="Stats"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Text}
+    !AddTags{#MUIA_Font             ,#MUIV_Font_Fixed}
+    !AddTags{#TAG_DONE}
+    *bmsil1._Object=!Label{"Original Addr:"}
+    *bmsit1._Object=!TextObject
+    *bmsil2._Object=!Label{"Chip Ops:"}
+    *bmsit2._Object=!TextObject
+    *bmsil3._Object=!Label{"Current Addr:"}
+    *bmsit3._Object=!TextObject
+    *bmsil4._Object=!Label{"Fast Ops:"}
+    *bmsit4._Object=!TextObject
+    *bmsil5._Object=!Label{"Patch Code:"}
+    *bmsit5._Object=!TextObject
+    *bmsil6._Object=!Label{"Passed On:"}
+    *bmsit6._Object=!TextObject
+    *bmsil7._Object=!Label{"Processed:"}
+    *bmsit7._Object=!TextObject
+    *bmsil8._Object=!Label{"Broken:"}
+    *bmsit8._Object=!TextObject
+    bmsib1$="Update"
+    *bmsib1._Object=!SimpleButton{bmsib1$}
+      #BMS_GAD6=#BMS_BASEID+6
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#BMS_GAD6}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*bmsib1,&Macro_Tags(0)}
+    bmsib2$="Reset"
+    *bmsib2._Object=!SimpleButton{bmsib2$}
+      #BMS_GAD7=#BMS_BASEID+7
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#BMS_GAD7}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*bmsib2,&Macro_Tags(0)}
+    !NewTags{!Child                 ,*bmsil1}
+    !AddTags{!Child                 ,*bmsit1}
+    !AddTags{!Child                 ,*bmsil2}
+    !AddTags{!Child                 ,*bmsit2}
+    !AddTags{!Child                 ,*bmsil3}
+    !AddTags{!Child                 ,*bmsit3}
+    !AddTags{!Child                 ,*bmsil4}
+    !AddTags{!Child                 ,*bmsit4}
+    !AddTags{!Child                 ,*bmsil5}
+    !AddTags{!Child                 ,*bmsit5}
+    !AddTags{!Child                 ,*bmsil6}
+    !AddTags{!Child                 ,*bmsit6}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*bmsil7}
+    !AddTags{!Child                 ,*bmsit7}
+    !AddTags{!Child                 ,*bmsib1}
+    !AddTags{!Child                 ,*bmsib2}
+    !AddTags{!Child                 ,*bmsil8}
+    !AddTags{!Child                 ,*bmsit8}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&bmsfig2$}
+    !AddTags{#TAG_DONE}
+    *bmsfig2._Object=!ColGroup{4}
+
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bmsfig1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*bmsfig2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *bmsfr2._Object=!VGroup
+
+  ;reg group
+
+    !NewTags{!Child                 ,*bmsfr1}
+    !AddTags{!Child                 ,*bmsfr2}
+    !AddTags{#TAG_DONE}
+    patch(5)\reg=!RegisterGroup{patch(5)\muisarray[0]}
+
+    If patch(5)\reg=0
+      doerror{"MUI creation failure in BitMapScale."}
+      Goto exit
+    Else
+
+  ;help
+      trash=MUIset{*bmsf1,#MUIA_ShortHelp,&h5$}
+      trash=MUIset{*bmsf2,#MUIA_ShortHelp,&h6$}
+      trash=MUIset{*bmsib1,#MUIA_ShortHelp,&h8$}
+      trash=MUIset{*bmsib2,#MUIA_ShortHelp,&h7$}
+      trash=MUIset{*bmsf3,#MUIA_ShortHelp,&h16$}
+      trash=MUIset{*bmsf5,#MUIA_ShortHelp,&h17$}
+    End If
+
+    Gosub bms_intfc
+    Gosub bms_stats
+
+  Return
+
+
+
+
+
+
+;poll bms
+
+.bms_poll
+
+  a.l=0
+
+  Select sel.l
+
+    Case  #BMS_GAD1                 ;install gadget
+      trash.l=GetAttr_(#MUIA_Selected,*bmsf1,&a)
+      flags.l=patch(5)\exe\flags
+      flags=unset{flags,#PF_INSTALLED,(a=#MUI_TRUE)}
+      error.l=installpatch{5,flags}
+
+      If error
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+        trash.l=MUIset{*bmsf1,#MUIA_Selected,#MUI_TRUE}
+        a$="FBitMapScale has been overpatched|"
+        a$+"and therefore cannot be removed!"
+        doerror{a$}
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+      Else
+        Gosub bms_stats
+      End If
+
+    Case  #BMS_GAD2                 ;active gadget
+      trash.l=GetAttr_(#MUIA_Selected,*bmsf2,&a)
+      patch(5)\exe\flags=unset{patch(5)\exe\flags,#PF_ACTIVATED,(a=#MUI_TRUE)}
+
+    Case  #BMS_GAD3                 ;chip data options
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*bmsf3,&a)
+
+      flags=patch(5)\exe\flags
+      flags=unset{flags,#BMSF_CPASSON,(a=0)}
+      flags=unset{flags,#BMSF_CPROCESS,(a=1)}
+      patch(5)\exe\flags=flags
+
+    Case  #BMS_GAD5                 ;fast option
+      trash.l=GetAttr_(#MUIA_Cycle_Active,*bmsf5,&a)
+
+      flags=patch(5)\exe\flags
+      flags=unset{flags,#BMSF_FPASSON,(a=0)}
+      flags=unset{flags,#BMSF_FPROCESS,(a=1)}
+      flags=unset{flags,#BMSF_FDISCARD,(a=2)}
+      patch(5)\exe\flags=flags
+
+    Case  #BMS_GAD6                 ;update stats
+      Gosub bms_stats
+
+    Case  #BMS_GAD7                 ;reset stats
+
+      Forbid_
+        patch(5)\exe\fastcnt=0
+        patch(5)\exe\proccnt=0
+        patch(5)\exe\passcnt=0
+        patch(5)\exe\user0=0
+      Permit_
+
+      Gosub bms_stats
+
+
+  End Select
+
+  Return
+
+
+
+
+
+
+;update the bms interface
+
+.bms_intfc:
+
+  flags.l=patch(5)\exe\flags
+
+  If (flags AND #PF_INSTALLED)
+    trash.l=MUIset{*bmsf1,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*bmsf1,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #PF_ACTIVATED)
+    trash.l=MUIset{*bmsf2,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*bmsf2,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #BMSF_CPASSON)
+    a.l=0
+  End If
+
+  If (flags AND #BMSF_CPROCESS)
+    a.l=1
+  End If
+
+  trash.l=MUIset{*bmsf3,#MUIA_Cycle_Active,a}
+
+
+  If (flags AND #BMSF_FPASSON)
+    a.l=0
+  End If
+
+  If (flags AND #BMSF_FPROCESS)
+    a.l=1
+  End If
+
+  If (flags AND #BMSF_FDISCARD)
+    a.l=2
+  End If
+
+  trash.l=MUIset{*bmsf5,#MUIA_Cycle_Active,a}
+
+  Return
+
+
+
+
+
+;update bms stats
+
+.bms_stats
+
+  Forbid_
+    current.l=Peek.l(patch(5)\base+patch(5)\lvo+2)
+    fast.l=patch(5)\exe\fastcnt
+    pass.l=patch(5)\exe\passcnt
+    proc.l=patch(5)\exe\proccnt
+    brl.l=patch(5)\exe\user0
+  Permit_
+
+  If patch(5)\exe\flags AND #PF_INSTALLED
+    trash.l=MUIset{*bmsit1,#MUIA_Text_Contents,"$"+Hex$(Peek.l(patch(5)\exe\orig+2))}
+  Else
+    trash.l=MUIset{*bmsit1,#MUIA_Text_Contents,"$--------"}
+  End If
+
+  total.l=pass+proc
+  trash.l=MUIset{*bmsit2,#MUIA_Text_Contents,"$"+Hex$(total-fast)}
+  trash.l=MUIset{*bmsit3,#MUIA_Text_Contents,"$"+Hex$(current)}
+  trash.l=MUIset{*bmsit4,#MUIA_Text_Contents,"$"+Hex$(fast)}
+  trash.l=MUIset{*bmsit5,#MUIA_Text_Contents,"$"+Hex$(&patch(5)\exe\code)}
+  trash.l=MUIset{*bmsit6,#MUIA_Text_Contents,"$"+Hex$(pass)}
+  trash.l=MUIset{*bmsit7,#MUIA_Text_Contents,"$"+Hex$(proc)}
+  trash.l=MUIset{*bmsit8,#MUIA_Text_Contents,"$"+Hex$(brk)}
+
+  Return
+
+
+muibmsx:

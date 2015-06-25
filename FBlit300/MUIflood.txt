@@ -1,0 +1,305 @@
+
+;MUI flood handler
+
+Goto muifloodx                  ;skip this code
+
+#FLOOD=6
+
+
+
+
+.define_flood
+  Data$ "Config","Info","*"
+  Data$ "Installed","Removed","*"
+  Data$ "Active","Disabled","**"
+
+  Dim floodf$(32)           ;*** MAX 32 STRINGS!! ***
+
+  Restore define_flood:
+
+  a.l=0
+  b.l=1
+  patch(#FLOOD)\muisarray[0]=&patch(#FLOOD)\muispnt[0]
+
+  Repeat
+    Read  floodf$(a)
+
+    If Left$(floodf$(a),1)="*"
+      patch(#FLOOD)\muispnt[a]=0
+      patch(#FLOOD)\muisarray[b]=&patch(#FLOOD)\muispnt[a+1]
+      b+1
+    Else
+      patch(#FLOOD)\muispnt[a]=&floodf$(a)
+    End If
+
+    a+1
+  Until floodf$(a-1)="**"
+
+  Return
+
+
+
+
+
+
+
+
+
+;build mui objects.
+
+.build_flood:
+
+  ;control group
+
+    #FLOOD_BASEID=$1000           ;flood return id base
+
+    floodf1$="Installed:"
+    *floodf1._Object=!CheckMark{0}
+
+    #FLOOD_GAD1=#FLOOD_BASEID+1
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app._Object               ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#FLOOD_GAD1}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*floodf1,&Macro_Tags(0)}
+
+    floodf2$="Activated:"
+    *floodf2._Object=!CheckMark{0}
+
+    #FLOOD_GAD2=#FLOOD_BASEID+2
+    !NewTags{#MUIM_Notify}
+    !AddTags{#MUIA_Selected             ,#MUIV_EveryTime}
+    !AddTags{*app                       ,2}
+    !AddTags{#MUIM_Application_ReturnID ,#FLOOD_GAD2}
+    !AddTags{#TAG_DONE}
+    trash.l=DoMethodA{*floodf2,&Macro_Tags(0)}
+
+    floodfg1$="Patch Installation"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{floodf1$}}
+    !AddTags{!Child                 ,*floodf1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!LLabel1{floodf2$}}
+    !AddTags{!Child                 ,*floodf2}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&floodfg1$}
+    !AddTags{TAG_DONE}
+    *floodfg1._Object=!HGroup
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*floodfg1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *floodfr1._Object=!VGroup
+
+  ;info group
+
+    *floodfil1._Object=!Label{patch(#FLOOD)\version}
+    floodfig1$="Version"
+    !NewTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*floodfil1}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&floodfig1$}
+    !AddTags{#TAG_DONE}
+    *floodfig1._Object=!HGroup
+
+    floodfig2$="Stats"
+    !NewTags{#MUIA_Frame            ,#MUIV_Frame_Text}
+    !AddTags{#MUIA_Font             ,#MUIV_Font_Fixed}
+    !AddTags{#TAG_DONE}
+    *floodil1._Object=!Label{"Original Addr:"}
+    *floodit1._Object=!TextObject
+    *floodil2._Object=!Label{"- :"}
+    *floodit2._Object=!TextObject
+    *floodil3._Object=!Label{"Current Addr:"}
+    *floodit3._Object=!TextObject
+    *floodil4._Object=!Label{"- :"}
+    *floodit4._Object=!TextObject
+    *floodil5._Object=!Label{"Patch Code:"}
+    *floodit5._Object=!TextObject
+    *floodil6._Object=!HSpace{0}
+    *floodit6._Object=!HSpace{0}
+    *floodil7._Object=!HSpace{0}
+    *floodit7._Object=!HSpace{0}
+    *floodil8._Object=!HSpace{0}
+    *floodit8._Object=!HSpace{0}
+    floodib1$="Update"
+    *floodib1._Object=!SimpleButton{floodib1$}
+      #FLOOD_GAD6=#FLOOD_BASEID+6
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#FLOOD_GAD6}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*floodib1,&Macro_Tags(0)}
+    floodib2$="Reset"
+    *floodib2._Object=!SimpleButton{floodib2$}
+      #FLOOD_GAD7=#FLOOD_BASEID+7
+      !NewTags{#MUIM_Notify}
+      !AddTags{#MUIA_Pressed              ,#MUI_FALSE}
+      !AddTags{*app                       ,2}
+      !AddTags{#MUIM_Application_ReturnID ,#FLOOD_GAD7}
+      !AddTags{#TAG_DONE}
+      trash.l=DoMethodA{*floodib2,&Macro_Tags(0)}
+    !NewTags{!Child                 ,*floodil1}
+    !AddTags{!Child                 ,*floodit1}
+    !AddTags{!Child                 ,*floodil2}
+    !AddTags{!Child                 ,*floodit2}
+    !AddTags{!Child                 ,*floodil3}
+    !AddTags{!Child                 ,*floodit3}
+    !AddTags{!Child                 ,*floodil4}
+    !AddTags{!Child                 ,*floodit4}
+    !AddTags{!Child                 ,*floodil5}
+    !AddTags{!Child                 ,*floodit5}
+    !AddTags{!Child                 ,*floodil6}
+    !AddTags{!Child                 ,*floodit6}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,!HSpace{0}}
+    !AddTags{!Child                 ,*floodil7}
+    !AddTags{!Child                 ,*floodit7}
+    !AddTags{!Child                 ,*floodib1}
+    !AddTags{!Child                 ,*floodib2}
+    !AddTags{!Child                 ,*floodil8}
+    !AddTags{!Child                 ,*floodit8}
+    !AddTags{#MUIA_Frame            ,#MUIV_Frame_Group}
+    !AddTags{#MUIA_FrameTitle       ,&floodfig2$}
+    !AddTags{#TAG_DONE}
+    *floodfig2._Object=!ColGroup{4}
+
+
+    !NewTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*floodfig1}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{!Child                 ,*floodfig2}
+    !AddTags{!Child                 ,!VSpace{0}}
+    !AddTags{#TAG_DONE}
+    *floodfr2._Object=!VGroup
+
+  ;reg group
+
+    !NewTags{!Child                 ,*floodfr1}
+    !AddTags{!Child                 ,*floodfr2}
+    !AddTags{#TAG_DONE}
+    patch(#FLOOD)\reg=!RegisterGroup{patch(#FLOOD)\muisarray[0]}
+
+    If patch(#FLOOD)\reg=0
+      doerror{"MUI creation failure in AllocMem."}
+      Goto exit
+    Else
+
+  ;help
+      trash=MUIset{*floodf1,#MUIA_ShortHelp,&h5$}
+      trash=MUIset{*floodf2,#MUIA_ShortHelp,&h6$}
+      trash=MUIset{*floodib1,#MUIA_ShortHelp,&h8$}
+      trash=MUIset{*floodib2,#MUIA_ShortHelp,&h7$}
+    End If
+
+    Gosub flood_intfc
+    Gosub flood_stats
+
+  Return
+
+
+
+
+
+
+;poll flood
+
+.flood_poll
+
+  a.l=0
+
+  Select sel.l
+
+    Case  #FLOOD_GAD1                 ;install gadget
+      trash.l=GetAttr_(#MUIA_Selected,*floodf1,&a)
+      flags.l=patch(#FLOOD)\exe\flags
+      flags=unset{flags,#PF_INSTALLED,(a=#MUI_TRUE)}
+      error.l=installpatch{#FLOOD,flags}
+
+      If error
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_TRUE}
+        trash.l=MUIset{*floodf1,#MUIA_Selected,#MUI_TRUE}
+        a$="FFlood has been overpatched|"
+        a$+"and therefore cannot be removed!"
+        doerror{a$}
+        trash.l=MUIset{*app,#MUIA_Application_Sleep,#MUI_FALSE}
+      Else
+        Gosub flood_stats
+      End If
+
+    Case  #FLOOD_GAD2                 ;active gadget
+      trash.l=GetAttr_(#MUIA_Selected,*floodf2,&a)
+      patch(#FLOOD)\exe\flags=unset{patch(#FLOOD)\exe\flags,#PF_ACTIVATED,(a=#MUI_TRUE)}
+
+    Case  #FLOOD_GAD6                 ;update stats
+      Gosub flood_stats
+
+    Case  #FLOOD_GAD7                 ;reset stats
+
+      Forbid_
+        patch(#FLOOD)\exe\fastcnt=0
+        patch(#FLOOD)\exe\proccnt=0
+        patch(#FLOOD)\exe\passcnt=0
+      Permit_
+
+      Gosub flood_stats
+
+
+  End Select
+
+  Return
+
+
+
+
+
+
+;update the flood interface
+
+.flood_intfc:
+
+  flags.l=patch(#FLOOD)\exe\flags
+
+  If (flags AND #PF_INSTALLED)
+    trash.l=MUIset{*floodf1,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*floodf1,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  If (flags AND #PF_ACTIVATED)
+    trash.l=MUIset{*floodf2,#MUIA_Selected,#MUI_TRUE}
+  Else
+    trash.l=MUIset{*floodf2,#MUIA_Selected,#MUI_FALSE}
+  End If
+
+  Return
+
+
+
+
+
+;update flood stats
+
+.flood_stats
+
+  Forbid_
+    current.l=Peek.l(patch(#FLOOD)\base+patch(#FLOOD)\lvo+2)
+  Permit_
+
+  If patch(#FLOOD)\exe\flags AND #PF_INSTALLED
+    trash.l=MUIset{*floodit1,#MUIA_Text_Contents,"$"+Hex$(Peek.l(patch(#FLOOD)\exe\orig+2))}
+  Else
+    trash.l=MUIset{*floodit1,#MUIA_Text_Contents,"$--------"}
+  End If
+
+  trash.l=MUIset{*floodit3,#MUIA_Text_Contents,"$"+Hex$(current)}
+  trash.l=MUIset{*floodit5,#MUIA_Text_Contents,"$"+Hex$(&patch(#FLOOD)\exe\code)}
+  Return
+
+
+muifloodx:

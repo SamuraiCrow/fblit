@@ -1,0 +1,222 @@
+
+
+
+;save gadget help
+
+h1$="Save the current settings"+Chr$($0a)
+h1$+"for use by this and future"+Chr$($0a)
+h1$+"instances of 'FBlit'."
+
+
+;use gadget help
+
+h2$="Use the current settings for"+Chr$($0a)
+h2$+"this instance of 'FBlit' only."
+
+
+;quit gadget help
+
+h3$="Attempt to Quit 'FBlit'."+Chr$($0a)
+h3$+"This can be dangerous!"
+
+
+;cancel gadget help
+
+h4$="Cancel these settings and attempt"+Chr$($0a)
+h4$+"to revert to the previous config."
+
+
+;patch install
+
+h5$="Install or remove this patch. Removal"+Chr$($0a)
+h5$+"of an installed patch can be dangerous!"+Chr$($0a)
+h5$+"(def: 'Installed')"
+
+
+;patch status
+
+h6$="Activate or disable this patch."+Chr$($0a)
+h6$+"Disabling a patch can be dangerous!"+Chr$($0a)
+h6$+"(def: 'Activated')"
+
+
+;stats reset
+
+h7$="Reset the statistics of this patch."
+
+;debug bbm
+
+h7a$="Display the BitMaps responsible for"+Chr$($0a)
+h7a$+"the last call designated as 'Broken'."
+
+
+;stats update
+
+h8$="Update this patch's statistics."
+
+
+.fbltbitmap
+
+;chip opt
+
+h9$="What to do when all Planes"+Chr$($0a)
+h9$+"are in Chip RAM."+Chr$($0a)
+h9$+"(def: 'Pass On Complex')"
+
+;chip proc
+
+h10$="How to process copy operations when"+Chr$($0a)
+h10$+"destination Planes are in Chip RAM."+Chr$($0a)
+h10$+"(def: 'Always Pretty')"
+
+;fast opt
+
+h11$="What to do when any Planes are"+Chr$($0a)
+h11$+"outside Chip RAM. Setting this to"+Chr$($0a)
+h11$+"'Pass On' can be dangerous!"+Chr$($0a)
+h11$+"(def: 'Process')"
+
+;stack
+
+h11a$="Generate 'Enforcer' hits when called"+Chr$($0a)
+h11a$+"with less than 512 bytes of free stack."+Chr$($0a)
+h11a$+"(def: 'Disabled')"
+
+
+.fbltblear
+
+;chip opt
+
+h12$="What to do when the memory"+Chr$($0a)
+h12$+"is in Chip RAM."+Chr$($0a)
+h12$+"(def: 'Pass On ASynch')"
+
+;fast opt
+
+h13$="What to do with memory that is"+Chr$($0a)
+h13$+"not in Chip RAM. Setting this to"+Chr$($0a)
+h13$+"'Pass On' may be dangerous!"+Chr$($0a)
+h13$+"(def: 'Process')"
+
+
+.fblttemplate
+
+;fast opt
+
+h14$="How to deal with data outside"+Chr$($0a)
+h14$+"Chip RAM. 'Pass On' can be"+Chr$($0a)
+h14$+"dangerous!"+Chr$($0a)
+h14$+"(def: 'Process')"
+
+
+.fbltpattern
+
+;chip opt
+
+h151$="What to do with data in Chip RAM."+Chr$($0a)
+h151$+"(def: 'Pass On Complex')"
+
+;fast opt
+
+h15$="What to do with data that is"+Chr$($0a)
+h15$+"not in Chip RAM. 'Pass On' can"+Chr$($0a)
+h15$+"be dangerous!"+Chr$($0a)
+h15$+"(def: 'Process')"
+
+
+.fbitmapscale
+
+;chip opt
+
+h16$="What to do when all Planes"+Chr$($0a)
+h16$+"are in Chip RAM."+Chr$($0a)
+h16$+"(def: 'Pass On')"
+
+;fast opt
+
+h17$="What to do when any Planes are"+Chr$($0a)
+h17$+"outside Chip RAM. 'Pass On' can"+Chr$($0a)
+h17$+"be dangerous!"+Chr$($0a)
+h17$+"(def: 'Process')"
+
+
+.fallocbitmap
+
+h18$="'Include' will promote only those tasks"+Chr$($0a)
+h18$+"listed on the 'Include List'. 'Exclude'"+Chr$($0a)
+h18$+"promotes all tasks not listed on the"+Chr$($0a)
+h18$+"'Exclude List', and is dangerous!"+Chr$($0a)
+h18$+"(def: 'Include')"
+
+h19$="Remove a task from the list."
+
+h20$="Add a task to the list."+Chr$($0a)
+h20$+"This may be dangerous!"
+
+h21$="Record tasks for the pop-up task"+Chr$($0a)
+h21$+"list, or not."+Chr$($0a)
+h21$+"(def: 'Disabled')"
+
+h22$="Activate or disable this patch."+Chr$($0a)
+h22$+"(def: 'Activated')"
+
+h22a$="What to do with anonymous tasks."+Chr$($0a)
+h22a$+"(def: 'Pass On')"
+
+h22b$="What to do with #BMF_DISPLAYABLE"+Chr$($0a)
+h22b$+"bitmap allocation requests. 'Promote'"+Chr$($0a)
+h22b$+"is very dangerous!"+Chr$($0a)
+h22b$+"(def: 'Pass On')"
+
+h22c$="Which type of memory should be"+Chr$($0a)
+h22c$+"used for promoted bitmaps."+Chr$($0a)
+h22c$+"(def: 'MEM_FAST')"
+
+
+.fdrawglist
+
+;chip opt
+h23$="What to do when all data is in Chip RAM."+Chr$($0a)
+h23$+"(def: 'Use Blitter')"
+
+;fast opt
+h24$="What to do when any data is outside Chip RAM."+Chr$($0a)
+h24$+"(def: 'CPU Process')"
+
+
+.fdraw
+
+;fast opt
+h25$="How to deal with a destination outside"+Chr$($0a)
+h25$+"Chip RAM. 'Pass On' can be dangerous!"+Chr$($0a)
+h25$+"(def: 'Process')"
+
+;chip opt
+h26$="What to do when the destination is in Chip RAM"+Chr$($0a)
+h26$+"'Process Hor' will use the CPU for horizontal"+Chr$($0a)
+h26$+"lines only."+Chr$($0a)
+h26$+"(def: 'Process Hor')"
+
+
+.fareend
+
+h27$="What to do when the destination RastPort"+Chr$($0a)
+h27$+"has a fast TmpRas. 'Pass On' may be dangerous."+Chr$($0a)
+h27$+"(def: 'discard')"
+
+
+.qbsblit
+
+h28$="Define how, or when, to render BOBs. 'Inline'"+Chr$($0a)
+h28$+"renders immediately, 'Beamsync' synchronizes"+Chr$($0a)
+h28$+"rendering with the raster."+Chr$($0a)
+h28$+"(def: 'Beamsync')"
+
+h29$="Which function should render BOBs? 'BlitEmu'"+Chr$($0a)
+h29$+"uses the blitter emulator, 'fblit.lib' uses low"+Chr$($0a)
+h29$+"level functions from fblit.library."+Chr$($0a)
+h29$+"(def: 'BlitEmu')"
+
+
+
+                                                                                                                          

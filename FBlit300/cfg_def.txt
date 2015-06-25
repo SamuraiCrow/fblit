@@ -1,0 +1,414 @@
+
+
+
+;'env:fblit.cfg' is used at startup. If null, hard coded def is used
+;and 'save' is called.
+;prefs changes effect realtime!
+;prefs/restore loads 'env:'
+;prefs/last saved loads 'envarc:'
+;prefs/default loads def
+;'cancel' loads 'env:'
+;'use' saves to 'env:'
+;'save' saves to 'envarc:' and calls use
+
+
+
+
+
+
+
+;install/update/remove a patch
+.install_pat
+
+  Function.l installpatch{pat.l,flag.l}
+
+    SHARED  patch.pathigh()
+
+    error.l=False
+    trash.l=patch(pat)\exe\flags
+
+    If patch(pat)\exe<>0
+      Disable_
+
+      If (trash AND #PF_INSTALLED)>0      ;allready installed
+
+        If (flag AND #PF_INSTALLED)=0     ;uninstall...
+
+          If FindPort_("SetMan")
+            trash.l=SetFunction_(patch(pat)\base,patch(pat)\lvo,patch(pat)\exe\orig)
+          Else
+
+            If Peek.l(patch(pat)\base+patch(pat)\lvo+2)=&patch(pat)\exe\code
+              trash.l=SetFunction_(patch(pat)\base,patch(pat)\lvo,patch(pat)\exe\orig)
+            Else
+              flag OR #PF_INSTALLED
+              error=True
+            End If
+
+          EndIf
+
+        End If
+
+      Else                                ;not installed
+
+        If (flag AND #PF_INSTALLED)>0     ;install...
+          patch(pat)\exe\flags=flag
+          patch(pat)\exe\orig=SetFunction_(patch(pat)\base,patch(pat)\lvo,&patch(pat)\exe\code)
+        End If
+
+      End If
+
+      patch(pat)\exe\flags=flag           ;set other flags...
+      CacheClearU_
+      Enable_
+    End If
+
+    Function Return error
+
+  End Function
+
+
+
+
+
+
+
+;default all patches
+.default_cfg
+
+  Statement def_cfg{}
+
+    SHARED  patch.pathigh(),stringlist.livelist()
+
+
+;BltBitMap
+
+    flag.l= #PF_INSTALLED                 ;install
+    flag OR #PF_ACTIVATED                 ;active
+    flag OR #BBMF_CPASSCMX                ;pass on complex chip
+    flag OR #BBMF_FPROCESS                ;process fast
+
+    patch(1)\tflags=flag
+
+;BltClear
+
+    flag.l= #PF_INSTALLED                 ;install
+    flag OR #PF_ACTIVATED                 ;activate
+    flag OR #BCF_CPASSASY                 ;pass on acynch chip
+    flag OR #BCF_FPROCESS                 ;process fast
+
+    patch(2)\tflags=flag
+
+;BltTemplate
+
+    flag.l= #PF_INSTALLED                 ;install
+    flag OR #PF_ACTIVATED                 ;active
+    flag OR #BTF_FPROCESS                 ;process fast
+
+    patch(3)\tflags=flag
+
+;BltPattern
+
+    flag.l= #PF_INSTALLED                 ;install
+    flag OR #PF_ACTIVATED                 ;active
+    flag OR #BPF_CPASSCMX                 ;pass on complex chip
+    flag OR #BPF_FPROCESS                 ;process fast
+
+    patch(4)\tflags=flag
+
+;BitMapScale
+
+    flag.l= #PF_INSTALLED                 ;install
+    flag OR #PF_ACTIVATED                 ;active
+    flag OR #BMSF_CPASSON                 ;pass on chip
+    flag OR #BMSF_FPROCESS                ;process fast
+
+    patch(5)\tflags=flag
+
+;AllocMem
+
+;    flag.l= #PF_INSTALLED
+;    flag OR #PF_ACTIVATED
+;
+;    patch(6)\tflags=flag
+
+;Flood
+
+    flag.l= #PF_INSTALLED
+    flag OR #PF_ACTIVATED
+
+    patch(6)\tflags=flag
+
+;AllocBitMap
+
+    flag.l= #PF_INSTALLED
+    flag OR #PF_ACTIVATED
+    flag OR #ABMF_INCLUDE
+
+    freelist{&stringlist(#FABM_INCLIST),True}
+
+definc:
+  Data$   "V's Image Decoder Process"
+  Data$   "Ibrowse_Network","AWebIP","FBLITPLANES","AWebJFIF decoder"
+  Data$   "AWebGif decoder","AWebPng decoder","AsyncLayoutDaemon"
+  Data$   "AsyncDTLayoutDaemon","dopus_pattern_stuff","SimCity2000"
+  Data$   "Multiview","**"
+
+
+    Restore definc
+    done.l=False
+    status.l=True
+
+    a$=Chr$($ab)+" IPrefs "+Chr$($bb)
+
+    Repeat
+      status=addmember{a$,&stringlist(#FABM_INCLIST),True}
+      Read a$
+    Until a$="**" OR status=False
+
+    If status=False
+      freelist{&stringlist(#FABM_INCLIST),True}
+    End If
+
+    freelist{&stringlist(#FABM_EXCLIST),True}
+
+    patch(7)\tflags=flag
+
+;SetRast
+
+    flag.l= #PF_INSTALLED                 ;install
+    flag OR #PF_ACTIVATED                 ;active
+
+    patch(8)\tflags=flag
+
+;DrawGList
+;
+;    flag.l= #PF_INSTALLED
+;    flag OR #PF_ACTIVATED
+;    flag OR #DGLF_CBLITTER
+;    flag OR #DGLF_FPROCESS
+;
+;    patch(9)\tflags=flag
+
+;AddBobPatch
+
+    flag.l= #PF_INSTALLED
+    flag OR #PF_ACTIVATED
+
+    patch(9)\tflags=flag
+
+;Draw
+
+    flag.l= #PF_INSTALLED                 ;install
+    flag OR #PF_ACTIVATED                 ;active
+    flag OR #DRF_FPROCESS                 ;process fast
+    flag OR #DRF_CLIMP                    ;process chip h&v
+
+    patch(10)\tflags=flag
+
+;Text
+;
+;    flag.l= #PF_INSTALLED
+;    flag OR #PF_ACTIVATED
+;
+;    patch(11)\tflags=flag
+
+;AreaEnd
+;
+;    flag.l= #PF_INSTALLED
+;    flag OR #PF_ACTIVATED
+;    flag OR #AEF_FDISCARD
+;
+;    patch(11)\tflags=flag
+
+;QBSBlitPatch
+
+    flag.l= #QBSBF_SYNC
+    flag OR #QBSBF_BLITEMU
+
+    patch(11)\tflags=flag
+
+;Flood
+;
+;    flag.l= #PF_INSTALLED
+;    flag OR #PF_ACTIVATED
+;    flag OR #FLF_FDISCARD
+;
+;    patch(13)\tflags=flag
+
+;OpenScreenTagList
+
+    flag.l= #PF_INSTALLED
+    flag OR #PF_ACTIVATED
+
+    patch(12)\tflags=flag
+
+;RemIBob
+
+    flag.l= #PF_INSTALLED
+    flag OR #PF_ACTIVATED
+
+    patch(13)\tflags=flag
+
+;AreaEnd
+
+    flag.l= #PF_INSTALLED
+    flag OR #PF_ACTIVATED
+
+    patch(14)\tflags=flag
+
+  End Statement
+
+
+
+
+;set up config stuff (from file cfg$) or defaults.
+.read_cfg
+
+  Statement read_cfg{cfg$}
+
+    SHARED  patch.pathigh(),stringlist.livelist()
+
+;default everything
+
+    def_cfg{}
+
+;overlay new cfg
+
+    If Exists(cfg$)
+      cfg_open=ReadFile(1,cfg$)
+      FileInput 1
+
+      If cfg_open
+
+        For a.l=1 To #NUM_PATCHES
+
+          If patch(a)\exe<>0
+            id$="*"+param{patch(a)\version,1,$20,0}
+
+            If find_param{1,id$,1,$0a}
+              flag.l=patch(a)\tflags
+              a$=Edit$(64)
+              b.l=1
+
+              While a$<>"*end"
+                flag=unset{flag,b,(a$="on")}
+                a$=Edit$(64)
+                b*2
+              Wend
+
+              patch(a)\tflags=flag
+            End If
+          End If
+
+        Next a
+
+        For a.l=1 To #NUM_LISTS
+          id$="*"+stringlist(a)\ll_name
+
+          If find_param{1,id$,1,$0a}
+            freelist{&stringlist(a),True}
+            a$=Edit$(256)
+
+            While a$<>"*end"
+              trash.l=addmember{a$,&stringlist(a),True}
+              a$=Edit$(256)
+            Wend
+
+          End If
+
+        Next a
+
+      End If
+
+    End If
+
+    If cfg_open
+
+;*** COMPATIBILITY fbltbitmap, pass on broken ***
+
+      If patch(1)\tflags AND #BBMF_FPASSBROKEN
+        flag=patch(1)\tflags
+        flag=unset{flag,#BBMF_FPASSBROKEN,False}
+        flag=unset{flag,#BBMF_FPROCESS,True}
+        patch(1)\tflags=flag
+      End If
+
+      CloseFile 1
+      DefaultInput
+    End If
+
+  End Statement
+
+
+
+
+
+
+;write new cfg file
+.write_cfg:
+
+  Statement write_cfg{cfg$}
+
+    SHARED  patch.pathigh(),version$,stringlist.livelist()
+
+    If Exists(cfg$)
+      KillFile cfg$
+    End If
+
+    cfg_open=WriteFile(1,cfg$)
+
+    If cfg_open
+      FileOutput 1
+
+      NPrint "Config generated by ",version$
+
+      For a.l=1 To #NUM_PATCHES
+
+        If patch(a)\exe<>0
+          NPrint "*",param{patch(a)\version,1,$20,0}
+          flag.l=patch(a)\exe\flags
+
+          For b.l=0 To 31
+
+            If (flag AND 1)>0
+              NPrint "on"
+            Else
+              NPrint "off"
+            End If
+
+            flag/2
+
+          Next b
+
+          NPrint "*end"
+        End If
+
+      Next a
+
+      For a.l=1 To #NUM_LISTS
+        NPrint "*",stringlist(a)\ll_name
+        laddr.l=stringlist(a)\ll_pntr\sl_list
+
+        For b.l=1 To stringlist(a)\ll_entries
+          a$=Peek$(Peek.l(laddr))
+          NPrint a$
+          laddr+4
+        Next b
+
+        NPrint "*end"
+      Next a
+
+    End If
+
+
+    If cfg_open
+      CloseFile 1
+      DefaultOutput
+    End If
+
+  End Statement
+
+
+
+

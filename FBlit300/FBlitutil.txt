@@ -1,0 +1,93 @@
+
+;Misc utility functions
+
+
+.strip_param:
+  Function$ param{a$,delta.l,delim.l,pad.l}
+
+;extract parameter #delta from a$ (para's separated by delim)
+;and fill param to pad with spaces.
+
+    a=1
+    l=Len(a$)
+
+    If l>0
+
+      While delta>0 AND a<=l
+        b=a
+        delta=delta-1
+
+        While a<=l AND Asc(Mid$(a$,a,1))<>delim
+          a=a+1
+        Wend
+
+        If a-b>0
+          b$=Mid$(a$,b,a-b)
+        Else
+          b$=""
+        End If
+
+        a=a+1
+      Wend
+
+      If b$=Chr$(delim)
+        b$=""
+      End If
+
+    End If
+
+    If (b$>"") AND (pad>0) AND (Len(b$)<pad)
+      b$=b$+SPACE$(pad-Len(b$))
+    End If
+
+    If delta
+      b$=""
+    End If
+
+    Function Return b$
+
+  End Function
+
+
+
+
+
+
+;special hacked version. ignores 'delta' and 'terminator' (uses $0a)
+.find_param:
+
+  Function.l find_param{fi.l,search$,delta.l,terminator.l}
+
+    status.l=False
+    filestart.l=Loc(fi)
+    fileterm.l=Lof(fi)-Len(search$)
+
+    While (Loc(fi)<fileterm) AND status=False
+      status=(Edit$(256)=search$)
+    Wend
+
+    If filestart>1 AND status=False
+      FileSeek fi,1
+      fileterm=filestart
+
+      While (Loc(fi)<fileterm) AND status=False
+        status=(Edit$(256)=search$)
+      Wend
+
+    End If
+
+    Function Return status
+  End Function
+
+
+
+
+;dummy ATM#
+.doerror
+
+  Statement doerror{error$}
+
+  End Statement
+
+
+
