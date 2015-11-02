@@ -4,7 +4,10 @@
 *
 *	FBltBitMap.s V2.17 04.02.2001
 *
-*	© Stephen Brookes 1997-99
+*	Â© Stephen Brookes 1997-99, Samuel Crow 2015
+*
+*	released under terms of the MIT license
+*	See LICENSE.md for more information
 *
 *	BltBitMap replacement using 020+ code and allowing blits
 *	outside chip RAM.
@@ -134,8 +137,8 @@ STACKCHECK		equ	12				;check stack
 
 	; BltBitMap()
 	
-SubMain:	cnop	0,4
-		btst		#ACTIVE,(l_Flags+3,pc)
+		cnop	0,4
+SubMain:	btst		#ACTIVE,(l_Flags+3,pc)
 		bne.s		NewMain				;--> active...
 
 		move.l		(l_OldBlit,pc),-(sp)
